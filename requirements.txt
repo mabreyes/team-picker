@@ -1,0 +1,22 @@
+# Team Picker Project Requirements (Enhanced)
+# Updated to include dependencies for image export and enhanced features
+
+# Core dependencies for image generation
+matplotlib>=3.5.0
+Pillow>=9.0.0
+
+# Python version: 3.8+
+# Standard library modules used:
+# - random
+# - json
+# - pathlib
+# - typing
+# - datetime
+# - dataclasses
+# - enum
+
+# Development and testing (optional)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=22.0.0
+# mypy>=0.950 
