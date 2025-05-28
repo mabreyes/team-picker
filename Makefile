@@ -1,5 +1,5 @@
 # Team Picker Development Makefile
-.PHONY: help install install-dev setup-pre-commit test lint format check clean run
+.PHONY: help install install-dev setup-pre-commit test test-only test-watch test-coverage test-clean lint format check clean run
 
 # Default target
 help:
@@ -12,7 +12,15 @@ help:
 	@echo ""
 	@echo "Development Commands:"
 	@echo "  run              Start the Flask development server"
-	@echo "  test             Run all tests"
+	@echo ""
+	@echo "Testing Commands:"
+	@echo "  test             Run all tests with coverage"
+	@echo "  test-only        Run tests without coverage"
+	@echo "  test-watch       Run tests in watch mode"
+	@echo "  test-coverage    Run tests and generate coverage reports"
+	@echo "  test-clean       Clean test artifacts and cache"
+	@echo ""
+	@echo "Quality Commands:"
 	@echo "  lint             Run all linting checks"
 	@echo "  format           Format all code"
 	@echo "  check            Run all quality checks (lint + test)"
@@ -40,10 +48,39 @@ setup-pre-commit: install-dev
 run:
 	python app.py
 
-test:
-	@echo "Running tests..."
-	pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing
+# Testing commands
+test: test-coverage
+	@echo "All tests completed with coverage!"
 
+test-only:
+	@echo "Running tests without coverage..."
+	pytest tests/ -v
+
+test-watch:
+	@echo "Running tests in watch mode (press Ctrl+C to stop)..."
+	pytest-watch tests/ -- -v
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	pytest tests/ -v --cov=. --cov-report=html --cov-report=term-missing --cov-report=xml --cov-fail-under=95
+	@echo "Coverage reports generated:"
+	@echo "  - HTML: htmlcov/index.html"
+	@echo "  - XML: coverage.xml"
+	@echo "  - Terminal: displayed above"
+
+test-clean:
+	@echo "Cleaning test artifacts..."
+	rm -rf .pytest_cache/
+	rm -rf htmlcov/
+	rm -f .coverage
+	rm -f coverage.xml
+	rm -rf .tox/
+	rm -rf .nox/
+	find tests/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find tests/ -type f -name "*.pyc" -delete
+	@echo "Test artifacts cleaned!"
+
+# Quality commands
 lint:
 	@echo "Running linting checks..."
 	@echo "1. Checking Python code with flake8..."
@@ -72,19 +109,21 @@ check: lint test
 	@echo "All quality checks completed!"
 
 # Maintenance commands
-clean:
+clean: test-clean
 	@echo "Cleaning up generated files..."
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
-	rm -rf .pytest_cache/
 	rm -rf .mypy_cache/
-	rm -rf htmlcov/
 	rm -rf dist/
 	rm -rf build/
 	rm -f bandit-report.json
+	rm -f safety-report.json
 	rm -rf output/
 	rm -rf uploads/
+	rm -f debug_flask.py
+	rm -f temp_*
+	rm -f *_backup.*
 	@echo "Cleanup completed!"
 
 update-deps:

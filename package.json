@@ -1,0 +1,27 @@
+{
+    "name": "team-picker",
+    "version": "1.0.0",
+    "description": "A Pythonic team assignment application following **Single Responsibility Principle (SRP)** with JSON and image export capabilities. Available as both **command-line application** and **web interface**.",
+    "main": "index.js",
+    "directories": {
+        "test": "tests"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mabreyes/team-picker.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/mabreyes/team-picker/issues"
+    },
+    "homepage": "https://github.com/mabreyes/team-picker#readme",
+    "devDependencies": {
+        "prettier": "^3.5.3"
+    }
+}

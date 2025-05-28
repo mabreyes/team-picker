@@ -51,6 +51,19 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Test artifacts and temporary files
+test_*.py
+temp_*
+*_backup.*
+debug_*.py
+*.tmp
+*.temp
+
+# Test output files
+test-results/
+test-output/
+.testmondata
+
 # Translations
 *.mo
 *.pot
@@ -317,10 +330,14 @@ output/
 *.jpg
 *.jpeg
 *.gif
-*.json
+
+# Test and development artifacts
 test_*.py
 temp_*
 *_backup.*
+debug_*.py
+*.tmp
+*.temp
 
 # Student data files (user-specific)
 student_list.txt
@@ -338,3 +355,14 @@ instance/
 bandit-report.json
 safety-report.json
 .pre-commit-cache/
+
+# Coverage and test reports
+htmlcov/
+coverage.xml
+.coverage
+.coverage.*
+test-results/
+test-output/
+.testmondata
+junit.xml
+pytest.xml
