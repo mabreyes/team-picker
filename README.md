@@ -30,10 +30,10 @@ team-picker/
 ├── services.py            # Service classes following SRP
 ├── team_picker_app.py     # Main application coordinator
 ├── example.py             # Complete usage examples
-├── student_list.txt       # Student data source
+├── student_list.txt       # Your student data (create this file)
 ├── requirements.txt       # Dependencies
 ├── README.md             # This documentation
-└── output/               # Generated exports
+└── output/               # Generated exports (auto-created)
     ├── json/            # JSON export files
     └── images/          # PNG image files
 ```
@@ -56,113 +56,51 @@ team-picker/
 ### **Application** (`team_picker_app.py`)
 - `TeamPickerApp`: Main coordinator using dependency injection
 
-## 🚀 Requirements
+## 🚀 Quick Start
 
+### 1. Install Dependencies
 ```bash
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-**Dependencies:**
-- Python 3.8+
-- matplotlib>=3.5.0 (for image generation)
-- Pillow>=9.0.0 (for image processing)
+### 2. Create Your Student List
+Create a `student_list.txt` file with one email per line:
 
-## 💻 Usage
-
-### **Interactive Mode**
-
-```bash
-python team_picker_app.py
+```txt
+john.doe@university.edu
+jane.smith@university.edu
+alex.johnson@university.edu
+maria.garcia@university.edu
+david.brown@university.edu
 ```
 
-### **Programmatic Usage**
-
-```python
-from team_picker_app import TeamPickerApp
-
-# Initialize application
-app = TeamPickerApp("student_list.txt")
-
-# Create teams by size
-result = app.create_teams_by_size(4)
-print(app.format_result(result, use_names=True))
-
-# Export to JSON and image
-exported = app.export_result(result, "my_teams")
-print(f"JSON: {exported['json_file']}")
-print(f"Image: {exported['image_file']}")
-
-# Create teams by count
-result = app.create_teams_by_count(6)
-exported = app.export_result(result)
-
-# Export student list
-student_exports = app.export_students("all_students")
-```
-
-### **Example Output Structure**
-
-**JSON Export:**
-```json
-{
-  "teams": [
-    {
-      "team_number": 1,
-      "members": [
-        {
-          "name": "Sheenery Abendan",
-          "email": "sheenery_abendan@dlsu.edu.ph"
-        }
-      ],
-      "size": 4
-    }
-  ],
-  "metadata": {
-    "method": "by_size",
-    "total_students": 30,
-    "num_teams": 8,
-    "base_team_size": 4
-  }
-}
-```
-
-**Image Export:**
-- Visual representation with colored team boxes
-- Team numbers and member counts
-- **All student names displayed** (no truncation)
-- Dynamic sizing based on team sizes
-- Professional layout with metadata
-
-## 📊 Examples
-
-Run the complete example to see all features:
-
+### 3. Run the Example
 ```bash
 python example.py
 ```
 
-This demonstrates:
-- Loading students from text file
-- Creating teams with different methods
-- Exporting to JSON and images with all names visible
-- Error handling
-- File organization
+If no `student_list.txt` exists, the example will create a sample file for you!
 
 ## 🎯 Student Data Format
 
 The application reads from `student_list.txt` with one email per line:
 
 ```
-sheenery_abendan@dlsu.edu.ph
-lorenzo_ambrosio@dlsu.edu.ph
-wray_andres@dlsu.edu.ph
-...
+john.doe@university.edu
+jane.smith@university.edu
+alex.johnson@university.edu
+maria.garcia@university.edu
 ```
 
 Names are automatically formatted from emails:
-- `sheenery_abendan@dlsu.edu.ph` → `Sheenery Abendan`
-- `samantha_michaela_bautista@dlsu.edu.ph` → `Samantha Michaela Bautista`
+- `john.doe@university.edu` → `John Doe`
+- `samantha.michaela.bautista@university.edu` → `Samantha Michaela Bautista`
+
+**Supported formats:**
+- Any email address with @ symbol
+- Names extracted from the part before @
+- Underscores converted to spaces
+- Automatic title case formatting
 
 ## 🔧 Customization
 

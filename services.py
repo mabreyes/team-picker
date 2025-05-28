@@ -28,14 +28,29 @@ class StudentRepository:
     def load_students(self) -> List[Student]:
         """Load students from text file."""
         if not self.file_path.exists():
-            raise FileNotFoundError(f"Student file not found: {self.file_path}")
+            raise FileNotFoundError(
+                f"Student file not found: {self.file_path}\n\n"
+                f"Please create a '{self.file_path}' file with one email per line.\n"
+                f"Example format:\n"
+                f"  john.doe@university.edu\n"
+                f"  jane.smith@university.edu\n"
+                f"  alex.johnson@university.edu\n"
+            )
         
         students = []
         with open(self.file_path, 'r', encoding='utf-8') as f:
-            for line in f:
+            for line_num, line in enumerate(f, 1):
                 email = line.strip()
                 if email and '@' in email:
                     students.append(Student(email=email))
+                elif email:  # Non-empty line without @
+                    print(f"Warning: Line {line_num} doesn't look like an email: {email}")
+        
+        if not students:
+            raise ValueError(
+                f"No valid email addresses found in {self.file_path}\n"
+                f"Please ensure the file contains email addresses, one per line."
+            )
         
         self._students = students
         return students

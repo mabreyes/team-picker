@@ -193,4 +193,9 @@ output/
 *.json
 test_*.py
 temp_*
-*_backup.* 
+*_backup.*
+
+# Student data files (user-specific)
+student_list.txt
+students.txt
+*_students.txt 
