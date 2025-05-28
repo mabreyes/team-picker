@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""
-Complete example of the Team Picker application.
-This demonstrates all major features in a single script.
+"""Team Picker Example Usage.
+
+This example demonstrates how to use the Team Picker application
+to load students from a file and create teams using different methods.
 """
 
-import os
 from pathlib import Path
+
 from team_picker_app import TeamPickerApp
 
 
@@ -13,7 +14,7 @@ def create_sample_student_list():
     """Create a sample student list file for demonstration."""
     sample_emails = [
         "john.doe@university.edu",
-        "jane.smith@university.edu", 
+        "jane.smith@university.edu",
         "alex.johnson@university.edu",
         "maria.garcia@university.edu",
         "david.brown@university.edu",
@@ -41,79 +42,117 @@ def create_sample_student_list():
         "steven.baker@university.edu",
         "michelle.nelson@university.edu",
         "kevin.carter@university.edu",
-        "kimberly.mitchell@university.edu"
+        "kimberly.mitchell@university.edu",
     ]
-    
+
     with open("student_list.txt", "w", encoding="utf-8") as f:
         for email in sample_emails:
             f.write(f"{email}\n")
-    
+
     print(f"📝 Created sample student_list.txt with {len(sample_emails)} students")
 
 
 def main():
-    print("🎯 Team Picker - Complete Example")
+    """Run the team picker example with sample data."""
+    # Create sample student list if it doesn't exist
+    student_file = "student_list.txt"
+
+    if not Path(student_file).exists():
+        print("Creating sample student list...")
+        sample_students = [
+            "john.doe@dlsu.edu.ph",
+            "jane.smith@dlsu.edu.ph",
+            "alex.johnson@dlsu.edu.ph",
+            "maria.garcia@dlsu.edu.ph",
+            "david.brown@dlsu.edu.ph",
+            "sarah.wilson@dlsu.edu.ph",
+            "michael.davis@dlsu.edu.ph",
+            "emily.taylor@dlsu.edu.ph",
+            "james.anderson@dlsu.edu.ph",
+            "lisa.thomas@dlsu.edu.ph",
+            "robert.jackson@dlsu.edu.ph",
+            "jennifer.white@dlsu.edu.ph",
+            "christopher.martin@dlsu.edu.ph",
+            "amanda.thompson@dlsu.edu.ph",
+            "daniel.rodriguez@dlsu.edu.ph",
+            "michelle.lee@dlsu.edu.ph",
+            "kevin.clark@dlsu.edu.ph",
+            "stephanie.lewis@dlsu.edu.ph",
+            "brian.walker@dlsu.edu.ph",
+            "nicole.hall@dlsu.edu.ph",
+            "ryan.allen@dlsu.edu.ph",
+            "jessica.young@dlsu.edu.ph",
+            "matthew.king@dlsu.edu.ph",
+            "ashley.wright@dlsu.edu.ph",
+            "joshua.lopez@dlsu.edu.ph",
+            "megan.hill@dlsu.edu.ph",
+            "andrew.scott@dlsu.edu.ph",
+            "rachel.green@dlsu.edu.ph",
+            "tyler.adams@dlsu.edu.ph",
+            "lauren.baker@dlsu.edu.ph",
+        ]
+
+        with open(student_file, "w", encoding="utf-8") as f:
+            for email in sample_students:
+                f.write(f"{email}\n")
+
+        print(f"Created {student_file} with {len(sample_students)} students")
+
+    # Initialize the team picker app
+    app = TeamPickerApp(student_file)
+
+    print("\n" + "=" * 60)
+    print("TEAM PICKER EXAMPLE")
     print("=" * 60)
-    
-    # Check if student list exists, create sample if not
-    if not Path("student_list.txt").exists():
-        print("❗ No student_list.txt found. Creating sample file...")
-        create_sample_student_list()
-        print()
-    
-    try:
-        # Initialize the team picker
-        app = TeamPickerApp()
-        
-        print(f"📚 Loaded {app.get_student_count()} students from student_list.txt")
-        print(f"📁 Output directory: {app.output_dir}")
-        print()
-        
-        # Example 1: Create teams by count
-        print("Example 1: Creating exactly 6 teams")
-        print("-" * 60)
-        
-        result = app.create_teams_by_count(6)
-        print(app.format_result(result))
-        
-        exports = app.export_result(result, "teams_by_count")
-        print(f"✅ Exported:")
-        print(f"   📄 JSON: {exports['json_file']}")
-        print(f"   🖼️  Image: {exports['image_file']}")
-        
-        print("\n" + "=" * 60)
-        
-        # Show generated files summary
-        print("\nGenerated files:")
-        print("-" * 60)
-        
-        if Path("output").exists():
-            for root, dirs, files in os.walk("output"):
-                for file in files:
-                    file_path = Path(root) / file
-                    size = file_path.stat().st_size
-                    print(f"   {file_path} ({size:,} bytes)")
-        
-        print(f"\n🎉 Example complete!")
-        print(f"📊 Created {result.num_teams} teams with equal distribution")
-        print(f"📄 Generated JSON files with structured data")
-        print(f"🖼️  Generated PNG images with visual layouts")
-        print(f"📁 All files organized in output/ directory")
-        
-        print(f"\n💻 Quick API Usage:")
-        print(f"   from team_picker_app import TeamPickerApp")
-        print(f"   app = TeamPickerApp()")
-        print(f"   result = app.create_teams_by_count(6)")
-        print(f"   exports = app.export_result(result, 'my_teams')")
-        
-    except FileNotFoundError as e:
-        print(f"❌ Error: {e}")
-        print("\n💡 To get started:")
-        print("   1. Create a 'student_list.txt' file")
-        print("   2. Add one email address per line")
-        print("   3. Run this example again")
-    except Exception as e:
-        print(f"❌ Error: {e}")
+
+    # Load and display students
+    students = app.load_students()
+    print(f"\nLoaded {len(students)} students from {student_file}")
+
+    # Example 1: Create teams by count (4 teams)
+    print("\n" + "-" * 40)
+    print("Example 1: Create 4 teams")
+    print("-" * 40)
+
+    result1 = app.create_teams_by_count(4)
+    print(app.format_result(result1))
+
+    # Export results
+    exports1 = app.export_result(result1, "example_4_teams")
+    print("\nExported files:")
+    print(f"  JSON: {exports1['json_file']}")
+    print(f"  Image: {exports1['image_file']}")
+
+    # Example 2: Create teams by size (teams of 5)
+    print("\n" + "-" * 40)
+    print("Example 2: Create teams of 5 students each")
+    print("-" * 40)
+
+    result2 = app.create_teams_by_size(5)
+    print(app.format_result(result2))
+
+    # Export results
+    exports2 = app.export_result(result2, "example_teams_of_5")
+    print("\nExported files:")
+    print(f"  JSON: {exports2['json_file']}")
+    print(f"  Image: {exports2['image_file']}")
+
+    # Example 3: Create student list visualization
+    print("\n" + "-" * 40)
+    print("Example 3: Create student list visualization")
+    print("-" * 40)
+
+    exports3 = app.export_student_list("example_student_list")
+    print("Student list exported:")
+    print(f"  Image: {exports3['image_file']}")
+
+    print("\n" + "=" * 60)
+    print("EXAMPLE COMPLETE")
+    print("=" * 60)
+    print("Check the 'output/' directory for generated files:")
+    print("  - JSON files with team assignments")
+    print("  - PNG images with visual team layouts")
+    print("  - Student list visualization")
 
 
 if __name__ == "__main__":

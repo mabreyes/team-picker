@@ -1,119 +1,185 @@
 #!/usr/bin/env python3
-"""
-Main Team Picker Application class.
-Coordinates all services following dependency injection and SRP.
+"""Team Picker Application.
+
+Main application class that coordinates all services
+and provides a clean API for team assignment operations.
 """
 
 from pathlib import Path
-from typing import Optional
-from datetime import datetime
+from typing import Dict, List
 
-from models import TeamAssignmentResult
+from models import Student, TeamAssignmentResult
 from services import (
+    ImageExportService,
+    JsonExportService,
+    OutputFormatter,
     StudentRepository,
     TeamAssignmentService,
-    JsonExportService,
-    ImageExportService,
-    OutputFormatter
 )
 
 
 class TeamPickerApp:
-    """Main application class coordinating all services."""
-    
-    def __init__(self, student_file: str = "student_list.txt"):
-        """Initialize the application with dependency injection."""
+    """Main application class coordinating all team picker functionality."""
+
+    def __init__(
+        self, student_file: str = "student_list.txt", output_dir: str = "output"
+    ):
+        """Initialize the team picker application.
+
+        Args:
+            student_file: Path to the student list file
+            output_dir: Directory for output files
+        """
         self.student_repository = StudentRepository(student_file)
-        self.assignment_service = TeamAssignmentService(self.student_repository)
-        self.json_export_service = JsonExportService()
-        self.image_export_service = ImageExportService()
+        self.assignment_service = TeamAssignmentService()
+        self.json_service = JsonExportService()
+        self.image_service = ImageExportService()
         self.formatter = OutputFormatter()
-        
+        self.output_dir = Path(output_dir)
+
+    def load_students(self) -> List[Student]:
+        """Load students from the configured file.
+
+        Returns:
+            List of Student objects
+        """
+        return self.student_repository.load_students()
+
+    def create_teams_by_count(self, num_teams: int) -> TeamAssignmentResult:
+        """Create a specific number of teams.
+
+        Args:
+            num_teams: Number of teams to create
+
+        Returns:
+            TeamAssignmentResult with assignment details
+        """
+        students = self.load_students()
+        return self.assignment_service.assign_by_team_count(students, num_teams)
+
+    def create_teams_by_size(self, team_size: int) -> TeamAssignmentResult:
+        """Create teams of a specific size.
+
+        Args:
+            team_size: Desired size for each team
+
+        Returns:
+            TeamAssignmentResult with assignment details
+        """
+        students = self.load_students()
+        return self.assignment_service.assign_by_team_size(students, team_size)
+
+    def format_result(self, result: TeamAssignmentResult) -> str:
+        """Format team assignment result for display.
+
+        Args:
+            result: Team assignment result to format
+
+        Returns:
+            Formatted string representation
+        """
+        return self.formatter.format_result(result)
+
+    def export_result(
+        self, result: TeamAssignmentResult, filename: str
+    ) -> Dict[str, str]:
+        """Export team assignment result to JSON and image files.
+
+        Args:
+            result: Team assignment result to export
+            filename: Base filename (without extension)
+
+        Returns:
+            Dictionary with paths to created files
+        """
         # Create output directories
-        self.output_dir = Path("output")
-        self.output_dir.mkdir(exist_ok=True)
-        (self.output_dir / "json").mkdir(exist_ok=True)
-        (self.output_dir / "images").mkdir(exist_ok=True)
-    
-    def get_students(self):
-        """Get all students."""
-        return self.student_repository.students
-    
+        json_dir = self.output_dir / "json"
+        image_dir = self.output_dir / "images"
+
+        # Export to JSON
+        json_file = self.json_service.export_result(result, filename, json_dir)
+
+        # Export to image
+        image_file = self.image_service.export_result(result, filename, image_dir)
+
+        return {
+            "json_file": str(json_file),
+            "image_file": str(image_file),
+        }
+
+    def export_student_list(self, filename: str) -> Dict[str, str]:
+        """Export student list to JSON and image files.
+
+        Args:
+            filename: Base filename (without extension)
+
+        Returns:
+            Dictionary with paths to created files
+        """
+        students = self.load_students()
+
+        # Create output directories
+        json_dir = self.output_dir / "json"
+        image_dir = self.output_dir / "images"
+
+        # Export to JSON
+        json_file = self.json_service.export_student_list(students, filename, json_dir)
+
+        # Export to image
+        image_file = self.image_service.export_student_list(
+            students, filename, image_dir
+        )
+
+        return {
+            "json_file": str(json_file),
+            "image_file": str(image_file),
+        }
+
     def get_student_count(self) -> int:
-        """Get the number of students."""
-        return self.student_repository.count
-    
-    def create_teams_by_size(self, team_size: int, shuffle: bool = True) -> TeamAssignmentResult:
-        """Create teams with specific size."""
-        return self.assignment_service.assign_by_size(team_size, shuffle)
-    
-    def create_teams_by_count(self, num_teams: int, shuffle: bool = True) -> TeamAssignmentResult:
-        """Create specific number of teams."""
-        return self.assignment_service.assign_by_count(num_teams, shuffle)
-    
-    def export_result(self, result: TeamAssignmentResult, base_name: Optional[str] = None) -> dict:
-        """Export result to both JSON and image formats."""
-        if base_name is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            base_name = f"teams_{result.method.value}_{timestamp}"
-        
-        # Export paths
-        json_path = self.output_dir / "json" / f"{base_name}.json"
-        image_path = self.output_dir / "images" / f"{base_name}.png"
-        
-        # Export to JSON
-        self.json_export_service.export_result(result, str(json_path))
-        
-        # Export to image
-        self.image_export_service.export_teams_as_image(result, str(image_path))
-        
-        return {
-            "json_file": str(json_path),
-            "image_file": str(image_path)
-        }
-    
-    def export_students(self, base_name: Optional[str] = None) -> dict:
-        """Export student list to both JSON and image formats."""
-        if base_name is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            base_name = f"students_{timestamp}"
-        
-        students = self.student_repository.students
-        
-        # Export paths
-        json_path = self.output_dir / "json" / f"{base_name}.json"
-        image_path = self.output_dir / "images" / f"{base_name}.png"
-        
-        # Export to JSON
-        self.json_export_service.export_students(students, str(json_path))
-        
-        # Export to image
-        self.image_export_service.export_students_as_image(students, str(image_path))
-        
-        return {
-            "json_file": str(json_path),
-            "image_file": str(image_path)
-        }
-    
-    def format_result(self, result: TeamAssignmentResult, use_names: bool = True) -> str:
-        """Format result for display."""
-        return self.formatter.format_result(result, use_names)
-    
-    def format_students(self) -> str:
-        """Format student list for display."""
-        return self.formatter.format_students(self.student_repository.students)
+        """Get the number of students in the loaded file.
+
+        Returns:
+            Number of students
+        """
+        return len(self.load_students())
+
+    def get_output_directory(self) -> str:
+        """Get the output directory path.
+
+        Returns:
+            Output directory path as string
+        """
+        return str(self.output_dir)
+
+    def create_sample_student_file(self, num_students: int = 30) -> None:
+        """Create a sample student file for testing.
+
+        Args:
+            num_students: Number of sample students to create
+        """
+        sample_emails = [
+            f"student{i:02d}@dlsu.edu.ph" for i in range(1, num_students + 1)
+        ]
+
+        student_file = Path(self.student_repository.file_path)
+        with open(student_file, "w", encoding="utf-8") as f:
+            for email in sample_emails:
+                f.write(f"{email}\n")
+
+        print(f"Created sample student file: {student_file}")
+        print(f"Generated {num_students} sample students")
 
 
 def main():
     """Interactive main function."""
     app = TeamPickerApp()
-    
+
     print("🎯 Team Picker Application (Enhanced)")
     print("=" * 50)
     print(f"Loaded {app.get_student_count()} students from file")
-    print(f"Output directory: {app.output_dir}")
+    print(f"Output directory: {app.get_output_directory()}")
     print()
-    
+
     while True:
         print("Choose an option:")
         print("1. Create teams by team size")
@@ -121,9 +187,9 @@ def main():
         print("3. View all students")
         print("4. Export student list")
         print("5. Exit")
-        
+
         choice = input("\nEnter your choice (1-5): ").strip()
-        
+
         if choice in ["1", "2"]:
             try:
                 if choice == "1":
@@ -132,46 +198,55 @@ def main():
                 else:
                     num_teams = int(input("Enter number of teams: "))
                     result = app.create_teams_by_count(num_teams)
-                
+
                 # Display result
-                use_names = input("Show formatted names? (y/n): ").lower().startswith('y')
-                print("\n" + app.format_result(result, use_names))
-                
+                print("\n" + app.format_result(result))
+
                 # Export options
-                export_choice = input("\nExport results? (y/n): ").lower().startswith('y')
+                export_choice = (
+                    input("\nExport results? (y/n): ").lower().startswith("y")
+                )
                 if export_choice:
-                    custom_name = input("Enter custom filename (or press Enter for auto): ").strip()
+                    custom_name = input(
+                        "Enter custom filename (or press Enter for auto): "
+                    ).strip()
                     export_name = custom_name if custom_name else None
-                    
+
                     exported = app.export_result(result, export_name)
-                    print(f"\n✅ Exported to:")
+                    print("\n✅ Exported to:")
                     print(f"   JSON: {exported['json_file']}")
                     print(f"   Image: {exported['image_file']}")
-                
+
             except ValueError as e:
                 print(f"❌ Error: {e}")
-        
+
         elif choice == "3":
-            print("\n" + app.format_students())
-        
+            students = app.load_students()
+            print(f"\nLoaded {len(students)} students:")
+            print("-" * 40)
+            for i, student in enumerate(students, 1):
+                print(f"{i:2d}. {student.name}")
+
         elif choice == "4":
-            custom_name = input("Enter custom filename (or press Enter for auto): ").strip()
+            custom_name = input(
+                "Enter custom filename (or press Enter for auto): "
+            ).strip()
             export_name = custom_name if custom_name else None
-            
-            exported = app.export_students(export_name)
-            print(f"\n✅ Student list exported to:")
+
+            exported = app.export_student_list(export_name)
+            print("\n✅ Student list exported to:")
             print(f"   JSON: {exported['json_file']}")
             print(f"   Image: {exported['image_file']}")
-        
+
         elif choice == "5":
             print("Goodbye! 👋")
             break
-        
+
         else:
             print("❌ Invalid choice. Please try again.")
-        
+
         print("\n" + "=" * 50)
 
 
 if __name__ == "__main__":
-    main() 
+    main()

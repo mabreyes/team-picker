@@ -1,84 +1,92 @@
 #!/usr/bin/env python3
-"""
-Data models for the Team Picker application.
-Following Single Responsibility Principle (SRP).
+"""Team Picker Data Models.
+
+Data classes and enums for representing students, teams,
+and team assignment results using dataclasses for clean structure.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List
 
 
 class AssignmentMethod(Enum):
-    """Enumeration for team assignment methods."""
+    """Enumeration of team assignment methods."""
+
     BY_SIZE = "by_size"
     BY_COUNT = "by_count"
 
 
 @dataclass
 class Student:
-    """Represents a student with email and formatted name."""
+    """Represents a student with email and derived name."""
+
     email: str
     name: str = field(init=False)
-    
+
     def __post_init__(self):
-        """Generate formatted name from email."""
-        name_part = self.email.replace("@dlsu.edu.ph", "")
-        self.name = name_part.replace("_", " ").title()
-    
+        """Initialize name from email after object creation."""
+        if not self.email or "@" not in self.email:
+            raise ValueError(f"Invalid email format: {self.email}")
+
+        # Extract name from email (part before @)
+        username = self.email.split("@")[0]
+        # Convert to readable name (replace dots/underscores with spaces, title case)
+        self.name = username.replace(".", " ").replace("_", " ").title()
+
     def __str__(self) -> str:
+        """Return string representation of the student."""
         return f"{self.name} ({self.email})"
 
 
 @dataclass
 class Team:
-    """Represents a team with members and metadata."""
+    """Represents a team with members and team number."""
+
+    team_number: int
     members: List[Student]
-    team_number: int = 0
-    
+
     @property
     def size(self) -> int:
         """Get the number of members in the team."""
         return len(self.members)
-    
-    def add_member(self, student: Student) -> None:
-        """Add a student to the team."""
-        self.members.append(student)
-    
+
     def __str__(self) -> str:
-        return f"Team {self.team_number} ({self.size} members)"
+        """Return string representation of the team."""
+        return f"Team {self.team_number}"
 
 
 @dataclass
 class TeamAssignmentResult:
-    """Result of team assignment with metadata."""
+    """Represents the result of a team assignment operation."""
+
     teams: List[Team]
     method: AssignmentMethod
     total_students: int
-    requested_value: int  # Either team_size or num_teams
-    
-    # Computed properties
-    num_teams: int = field(init=False)
-    complete_teams: int = field(init=False)
-    remaining_students: int = field(init=False)
-    base_team_size: int = field(init=False)
-    teams_with_extra: int = field(init=False)
-    
-    def __post_init__(self):
-        """Calculate metadata after initialization."""
-        self.num_teams = len(self.teams)
-        
-        if self.method == AssignmentMethod.BY_SIZE:
-            self.complete_teams = self.total_students // self.requested_value
-            self.remaining_students = self.total_students % self.requested_value
-            self.base_team_size = self.requested_value
-            self.teams_with_extra = 1 if self.remaining_students > 0 else 0
-        else:  # BY_COUNT
-            self.base_team_size = self.total_students // self.requested_value
-            self.teams_with_extra = self.total_students % self.requested_value
-            self.complete_teams = self.requested_value - self.teams_with_extra
-            self.remaining_students = 0
-    
+    num_teams: int
+    base_team_size: int
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    @property
+    def teams_with_extra(self) -> int:
+        """Get the number of teams with extra members."""
+        return sum(1 for team in self.teams if team.size > self.base_team_size)
+
+    @property
+    def complete_teams(self) -> int:
+        """Get the number of complete teams (with base size)."""
+        return sum(1 for team in self.teams if team.size == self.base_team_size)
+
+    @property
+    def remaining_students(self) -> int:
+        """Get the number of students in incomplete teams."""
+        return sum(
+            team.size - self.base_team_size
+            for team in self.teams
+            if team.size > self.base_team_size
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert result to dictionary for JSON serialization."""
         return {
@@ -86,13 +94,10 @@ class TeamAssignmentResult:
                 {
                     "team_number": team.team_number,
                     "members": [
-                        {
-                            "name": student.name,
-                            "email": student.email
-                        }
+                        {"name": student.name, "email": student.email}
                         for student in team.members
                     ],
-                    "size": team.size
+                    "size": team.size,
                 }
                 for team in self.teams
             ],
@@ -100,10 +105,10 @@ class TeamAssignmentResult:
                 "method": self.method.value,
                 "total_students": self.total_students,
                 "num_teams": self.num_teams,
-                "requested_value": self.requested_value,
                 "base_team_size": self.base_team_size,
                 "complete_teams": self.complete_teams,
                 "remaining_students": self.remaining_students,
-                "teams_with_extra": self.teams_with_extra
-            }
-        } 
+                "teams_with_extra": self.teams_with_extra,
+                "timestamp": self.timestamp.isoformat(),
+            },
+        }

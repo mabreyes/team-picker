@@ -37,4 +37,4 @@ striprtf>=0.0.26  # For RTF file parsing
 # Pillow: For image processing and manipulation
 # numpy: For gradient effects and advanced image processing
 # Flask: Web framework for the application
-# Werkzeug: WSGI utilities for Flask 
+# Werkzeug: WSGI utilities for Flask

@@ -1,488 +1,594 @@
 #!/usr/bin/env python3
-"""
-Service classes for the Team Picker application.
-Each class has a single responsibility following SRP.
+"""Team Picker Services.
+
+Service classes implementing the Single Responsibility Principle
+for team assignment, data export, and file management operations.
 """
 
-import random
 import json
+import math
+import random
 from pathlib import Path
-from typing import List, Optional
-from PIL import Image, ImageDraw, ImageFont
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.patches import FancyBboxPatch
-import numpy as np
-from io import BytesIO
+from typing import List
 
-from models import Student, Team, TeamAssignmentResult, AssignmentMethod
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+
+from models import AssignmentMethod, Student, Team, TeamAssignmentResult
 
 
 class StudentRepository:
-    """Handles loading and managing student data."""
-    
-    def __init__(self, file_path: str = "student_list.txt"):
+    """Handles loading and managing student data from files."""
+
+    def __init__(self, file_path: str):
+        """Initialize the repository with a file path.
+
+        Args:
+            file_path: Path to the student list file
+        """
         self.file_path = Path(file_path)
-        self._students: Optional[List[Student]] = None
-    
+
     def load_students(self) -> List[Student]:
-        """Load students from text file."""
+        """Load students from the configured file.
+
+        Returns:
+            List of Student objects
+
+        Raises:
+            FileNotFoundError: If the student file doesn't exist
+            ValueError: If no valid students found in file
+        """
         if not self.file_path.exists():
-            raise FileNotFoundError(
-                f"Student file not found: {self.file_path}\n\n"
-                f"Please create a '{self.file_path}' file with one email per line.\n"
-                f"Example format:\n"
-                f"  john.doe@university.edu\n"
-                f"  jane.smith@university.edu\n"
-                f"  alex.johnson@university.edu\n"
-            )
-        
+            raise FileNotFoundError(f"Student file not found: {self.file_path}")
+
         students = []
-        with open(self.file_path, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
+        with open(self.file_path, "r", encoding="utf-8") as file:
+            for line_num, line in enumerate(file, 1):
                 email = line.strip()
-                if email and '@' in email:
-                    students.append(Student(email=email))
-                elif email:  # Non-empty line without @
-                    print(f"Warning: Line {line_num} doesn't look like an email: {email}")
-        
+                if email and "@" in email:
+                    try:
+                        student = Student(email=email)
+                        students.append(student)
+                    except ValueError as e:
+                        print(
+                            f"Warning: Invalid email on line {line_num}: {email} - {e}"
+                        )
+
         if not students:
-            raise ValueError(
-                f"No valid email addresses found in {self.file_path}\n"
-                f"Please ensure the file contains email addresses, one per line."
-            )
-        
-        self._students = students
+            raise ValueError(f"No valid students found in {self.file_path}")
+
         return students
-    
-    @property
-    def students(self) -> List[Student]:
-        """Get cached students or load them."""
-        if self._students is None:
-            return self.load_students()
-        return self._students
-    
-    @property
-    def count(self) -> int:
-        """Get the number of students."""
-        return len(self.students)
 
 
 class TeamAssignmentService:
-    """Handles team assignment logic."""
-    
-    def __init__(self, student_repository: StudentRepository):
-        self.student_repository = student_repository
-    
-    def assign_by_size(self, team_size: int, shuffle: bool = True) -> TeamAssignmentResult:
-        """Assign students to teams of specific size."""
-        if team_size <= 0:
-            raise ValueError("Team size must be greater than 0")
-        
-        students = self.student_repository.students.copy()
-        if team_size > len(students):
-            raise ValueError(f"Team size ({team_size}) cannot be larger than total students ({len(students)})")
-        
-        if shuffle:
-            random.shuffle(students)
-        
-        teams = []
-        current_index = 0
-        team_number = 1
-        
-        while current_index < len(students):
-            team_members = students[current_index:current_index + team_size]
-            team = Team(members=team_members, team_number=team_number)
-            teams.append(team)
-            current_index += team_size
-            team_number += 1
-        
-        return TeamAssignmentResult(
-            teams=teams,
-            method=AssignmentMethod.BY_SIZE,
-            total_students=len(students),
-            requested_value=team_size
-        )
-    
-    def assign_by_count(self, num_teams: int, shuffle: bool = True) -> TeamAssignmentResult:
-        """Assign students to a specific number of teams."""
+    """Handles team assignment logic and algorithms."""
+
+    def __init__(self):
+        """Initialize the team assignment service."""
+        pass
+
+    def assign_by_team_count(
+        self, students: List[Student], num_teams: int
+    ) -> TeamAssignmentResult:
+        """Assign students to a specific number of teams.
+
+        Args:
+            students: List of students to assign
+            num_teams: Number of teams to create
+
+        Returns:
+            TeamAssignmentResult with assignment details
+
+        Raises:
+            ValueError: If num_teams is invalid
+        """
         if num_teams <= 0:
-            raise ValueError("Number of teams must be greater than 0")
-        
-        students = self.student_repository.students.copy()
+            raise ValueError("Number of teams must be positive")
         if num_teams > len(students):
-            raise ValueError(f"Number of teams ({num_teams}) cannot be larger than total students ({len(students)})")
-        
-        if shuffle:
-            random.shuffle(students)
-        
+            raise ValueError(
+                f"Cannot create {num_teams} teams with only {len(students)} students"
+            )
+
+        # Shuffle students for random assignment
+        shuffled_students = students.copy()
+        random.shuffle(shuffled_students)
+
         # Calculate team sizes
         base_size = len(students) // num_teams
-        remainder = len(students) % num_teams
-        
+        extra_students = len(students) % num_teams
+
         teams = []
-        current_index = 0
-        
-        for i in range(num_teams):
-            # Some teams get one extra member
-            team_size = base_size + (1 if i < remainder else 0)
-            team_members = students[current_index:current_index + team_size]
-            team = Team(members=team_members, team_number=i + 1)
+        student_index = 0
+
+        for team_num in range(1, num_teams + 1):
+            # Some teams get an extra student if there's a remainder
+            team_size = base_size + (1 if team_num <= extra_students else 0)
+            team_students = shuffled_students[student_index : student_index + team_size]
+
+            team = Team(team_number=team_num, members=team_students)
             teams.append(team)
-            current_index += team_size
-        
+            student_index += team_size
+
         return TeamAssignmentResult(
             teams=teams,
             method=AssignmentMethod.BY_COUNT,
             total_students=len(students),
-            requested_value=num_teams
+            num_teams=num_teams,
+            base_team_size=base_size,
+        )
+
+    def assign_by_team_size(
+        self, students: List[Student], team_size: int
+    ) -> TeamAssignmentResult:
+        """Assign students to teams of a specific size.
+
+        Args:
+            students: List of students to assign
+            team_size: Desired size for each team
+
+        Returns:
+            TeamAssignmentResult with assignment details
+
+        Raises:
+            ValueError: If team_size is invalid
+        """
+        if team_size <= 0:
+            raise ValueError("Team size must be positive")
+        if team_size > len(students):
+            raise ValueError(
+                f"Team size {team_size} is larger than total students {len(students)}"
+            )
+
+        # Shuffle students for random assignment
+        shuffled_students = students.copy()
+        random.shuffle(shuffled_students)
+
+        teams = []
+        num_complete_teams = len(students) // team_size
+        remaining_students = len(students) % team_size
+
+        # Create complete teams
+        for team_num in range(1, num_complete_teams + 1):
+            start_idx = (team_num - 1) * team_size
+            end_idx = start_idx + team_size
+            team_students = shuffled_students[start_idx:end_idx]
+
+            team = Team(team_number=team_num, members=team_students)
+            teams.append(team)
+
+        # Handle remaining students
+        if remaining_students > 0:
+            remaining = shuffled_students[num_complete_teams * team_size :]
+
+            # Distribute remaining students to existing teams
+            for i, student in enumerate(remaining):
+                teams[i % len(teams)].members.append(student)
+
+        return TeamAssignmentResult(
+            teams=teams,
+            method=AssignmentMethod.BY_SIZE,
+            total_students=len(students),
+            num_teams=len(teams),
+            base_team_size=team_size,
         )
 
 
 class JsonExportService:
     """Handles JSON export functionality."""
-    
-    @staticmethod
-    def export_result(result: TeamAssignmentResult, file_path: str) -> None:
-        """Export team assignment result to JSON file."""
-        output_path = Path(file_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(result.to_dict(), f, indent=2, ensure_ascii=False)
-    
-    @staticmethod
-    def export_students(students: List[Student], file_path: str) -> None:
-        """Export student list to JSON file."""
-        output_path = Path(file_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        student_data = {
-            "students": [
+
+    def __init__(self):
+        """Initialize the JSON export service."""
+        pass
+
+    def export_result(
+        self, result: TeamAssignmentResult, filename: str, output_dir: Path
+    ) -> Path:
+        """Export team assignment result to JSON file.
+
+        Args:
+            result: Team assignment result to export
+            filename: Base filename (without extension)
+            output_dir: Directory to save the file
+
+        Returns:
+            Path to the created JSON file
+        """
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Convert result to dictionary
+        data = {
+            "metadata": {
+                "method": result.method.value,
+                "total_students": result.total_students,
+                "num_teams": result.num_teams,
+                "base_team_size": result.base_team_size,
+                "timestamp": result.timestamp.isoformat(),
+            },
+            "teams": [
                 {
-                    "name": student.name,
-                    "email": student.email
+                    "team_number": team.team_number,
+                    "size": team.size,
+                    "members": [
+                        {"name": member.name, "email": member.email}
+                        for member in team.members
+                    ],
                 }
-                for student in students
+                for team in result.teams
             ],
-            "total_count": len(students)
         }
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(student_data, f, indent=2, ensure_ascii=False)
+
+        json_file = output_dir / f"{filename}.json"
+        with open(json_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        return json_file
+
+    def export_student_list(
+        self, students: List[Student], filename: str, output_dir: Path
+    ) -> Path:
+        """Export student list to JSON file.
+
+        Args:
+            students: List of students to export
+            filename: Base filename (without extension)
+            output_dir: Directory to save the file
+
+        Returns:
+            Path to the created JSON file
+        """
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        data = {
+            "metadata": {
+                "total_students": len(students),
+                "export_type": "student_list",
+            },
+            "students": [
+                {"name": student.name, "email": student.email} for student in students
+            ],
+        }
+
+        json_file = output_dir / f"{filename}.json"
+        with open(json_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        return json_file
 
 
 class ImageExportService:
-    """Handles professional image export functionality."""
-    
-    def __init__(self, font_size: int = 12):
-        self.font_size = font_size
-        # Professional color palette
-        self.colors = [
-            '#3498DB',  # Beautiful Blue
-            '#E74C3C',  # Vibrant Red
-            '#2ECC71',  # Emerald Green
-            '#F39C12',  # Orange
-            '#9B59B6',  # Purple
-            '#1ABC9C',  # Turquoise
-            '#E67E22',  # Carrot
-            '#34495E',  # Dark Blue-Gray
-            '#F1C40F',  # Golden Yellow
-            '#E91E63',  # Pink
-            '#8E44AD',  # Violet
-            '#27AE60',  # Nephritis Green
-        ]
-        
-        # Set professional style with macOS system fonts
-        plt.style.use('default')
-        
-        # Use macOS native fonts with fallbacks
-        font_family = [
-            'Helvetica Neue',  # Classic macOS font
-            'Helvetica',       # macOS fallback
-            'Arial',           # Cross-platform fallback
-            'DejaVu Sans',     # Linux fallback
-            'sans-serif'       # Final fallback
-        ]
-        
-        plt.rcParams.update({
-            'font.family': font_family,
-            'font.size': 10,
-            'font.weight': 'normal',
-            'axes.linewidth': 0,
-            'figure.facecolor': '#FAFAFA',
-            'axes.facecolor': '#FFFFFF'
-        })
-    
-    def export_teams_as_image(self, result: TeamAssignmentResult, file_path: str) -> None:
-        """Export team assignment result as a professional image."""
-        # Calculate optimal layout
+    """Handles image export functionality with professional styling."""
+
+    def __init__(self):
+        """Initialize the image export service."""
+        # Configure matplotlib for high-quality output
+        plt.rcParams.update(
+            {
+                "font.family": [
+                    "Helvetica Neue",
+                    "Helvetica",
+                    "Arial",
+                    "DejaVu Sans",
+                    "sans-serif",
+                ],
+                "font.size": 10,
+                "figure.dpi": 300,
+                "savefig.dpi": 300,
+                "savefig.bbox": "tight",
+                "savefig.facecolor": "white",
+                "axes.facecolor": "white",
+            }
+        )
+
+    def export_result(
+        self, result: TeamAssignmentResult, filename: str, output_dir: Path
+    ) -> Path:
+        """Export team assignment result as a professional image.
+
+        Args:
+            result: Team assignment result to export
+            filename: Base filename (without extension)
+            output_dir: Directory to save the file
+
+        Returns:
+            Path to the created image file
+        """
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Calculate dynamic sizing based on content
         max_team_size = max(team.size for team in result.teams)
-        
-        # Determine grid layout for teams
-        if result.num_teams <= 3:
-            cols = result.num_teams
-            rows = 1
-        elif result.num_teams <= 6:
-            cols = 3
-            rows = 2
-        elif result.num_teams <= 9:
-            cols = 3
-            rows = 3
-        else:
-            cols = 4
-            rows = (result.num_teams + 3) // 4
-        
-        # Calculate figure size based on content
-        fig_width = max(16, cols * 5)
-        fig_height = max(10, 4 + rows * (3 + max_team_size * 0.4))
-        
-        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-        ax.set_xlim(0, cols * 5)
-        ax.set_ylim(0, fig_height)
-        ax.axis('off')
-        
-        # Beautiful gradient background
-        gradient = np.linspace(0, 1, 256).reshape(256, -1)
-        gradient = np.vstack((gradient, gradient))
-        ax.imshow(gradient, extent=[0, cols * 5, 0, fig_height], 
-                 aspect='auto', cmap='Blues', alpha=0.1)
-        
-        # Professional header with shadow effect
-        header_y = fig_height - 1.5
-        
-        # Title shadow
-        title = f"Team Assignment Results"
-        ax.text(cols * 2.5 + 0.02, header_y - 0.02, title, 
-               fontsize=24, fontweight='bold', ha='center', va='center',
-               color='gray', alpha=0.5)
-        
-        # Main title
-        ax.text(cols * 2.5, header_y, title, 
-               fontsize=24, fontweight='bold', ha='center', va='center',
-               color='#2C3E50')
-        
-        # Subtitle with method info
-        method_text = f"{result.method.value.replace('_', ' ').title()}"
-        ax.text(cols * 2.5, header_y - 0.6, method_text, 
-               fontsize=16, ha='center', va='center',
-               color='#34495E', style='italic')
-        
-        # Professional metadata panel
-        metadata_y = header_y - 1.2
-        metadata_text = (f"Students: {result.total_students}  •  "
-                        f"Teams: {result.num_teams}  •  "
-                        f"Base Size: {result.base_team_size}")
-        
-        # Metadata background
-        metadata_bg = FancyBboxPatch((0.5, metadata_y - 0.25), cols * 5 - 1, 0.5,
-                                   boxstyle="round,pad=0.1",
-                                   facecolor='white', edgecolor='#BDC3C7',
-                                   linewidth=1, alpha=0.9)
-        ax.add_patch(metadata_bg)
-        
-        ax.text(cols * 2.5, metadata_y, metadata_text, 
-               fontsize=14, ha='center', va='center',
-               color='#2C3E50', weight='medium')
-        
-        # Calculate team positioning
-        start_y = fig_height - 3.5
-        team_spacing_x = 5
-        team_spacing_y = 3 + max_team_size * 0.4
-        
+        num_teams = len(result.teams)
+
+        # Dynamic figure sizing
+        base_width = 16
+        base_height = max(12, num_teams * 2 + max_team_size * 0.5)
+
+        fig, ax = plt.subplots(figsize=(base_width, base_height))
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.axis("off")
+
+        # Color palette for teams
+        colors = [
+            "#FF6B6B",
+            "#4ECDC4",
+            "#45B7D1",
+            "#96CEB4",
+            "#FFEAA7",
+            "#DDA0DD",
+            "#98D8C8",
+            "#F7DC6F",
+            "#BB8FCE",
+            "#85C1E9",
+            "#F8C471",
+            "#82E0AA",
+            "#F1948A",
+            "#85C1E9",
+            "#D7BDE2",
+        ]
+
+        # Header
+        header_text = (
+            f"Team Assignment Results - {result.method.value.replace('_', ' ').title()}"
+        )
+        ax.text(
+            5,
+            9.5,
+            header_text,
+            fontsize=20,
+            fontweight="bold",
+            ha="center",
+            va="center",
+        )
+
+        # Metadata
+        metadata_text = (
+            f"Total Students: {result.total_students} | "
+            f"Teams: {result.num_teams} | "
+            f"Base Size: {result.base_team_size}"
+        )
+        ax.text(5, 9, metadata_text, fontsize=12, ha="center", va="center", alpha=0.7)
+
+        # Calculate layout
+        cols = min(3, num_teams)
+
+        card_width = 2.8
+        card_height = max(2.5, max_team_size * 0.3 + 1.5)
+
+        start_x = (10 - (cols * card_width + (cols - 1) * 0.3)) / 2
+        start_y = 8 - card_height
+
         for i, team in enumerate(result.teams):
             row = i // cols
             col = i % cols
-            
-            # Center teams in the last row if incomplete
-            if row == rows - 1:
-                teams_in_last_row = result.num_teams - (rows - 1) * cols
-                offset = (cols - teams_in_last_row) * team_spacing_x / 2
-                x = offset + col * team_spacing_x + 2.5
-            else:
-                x = col * team_spacing_x + 2.5
-            
-            y = start_y - row * team_spacing_y
-            
-            # Team card dimensions
-            card_width = 4
-            card_height = min(2.5 + team.size * 0.35, team_spacing_y - 0.5)
-            
-            # Professional team card with shadow
-            shadow = FancyBboxPatch((x - card_width/2 + 0.05, y - card_height + 0.05), 
-                                  card_width, card_height,
-                                  boxstyle="round,pad=0.15",
-                                  facecolor='gray', alpha=0.2)
+
+            x = start_x + col * (card_width + 0.3)
+            y = start_y - row * (card_height + 0.4)
+
+            # Team card with gradient effect
+            color = colors[i % len(colors)]
+
+            # Main card
+            card = patches.FancyBboxPatch(
+                (x, y),
+                card_width,
+                card_height,
+                boxstyle="round,pad=0.05",
+                facecolor=color,
+                edgecolor="white",
+                linewidth=2,
+                alpha=0.9,
+            )
+            ax.add_patch(card)
+
+            # Shadow effect
+            shadow = patches.FancyBboxPatch(
+                (x + 0.05, y - 0.05),
+                card_width,
+                card_height,
+                boxstyle="round,pad=0.05",
+                facecolor="gray",
+                alpha=0.3,
+                zorder=0,
+            )
             ax.add_patch(shadow)
-            
-            # Main team card
-            color = self.colors[i % len(self.colors)]
-            team_card = FancyBboxPatch((x - card_width/2, y - card_height), 
-                                     card_width, card_height,
-                                     boxstyle="round,pad=0.15",
-                                     facecolor=color, alpha=0.2,
-                                     edgecolor=color, linewidth=2)
-            ax.add_patch(team_card)
-            
-            # Team header background
-            header_height = 0.6
-            team_header = FancyBboxPatch((x - card_width/2, y - header_height), 
-                                       card_width, header_height,
-                                       boxstyle="round,pad=0.15",
-                                       facecolor=color, alpha=0.8)
-            ax.add_patch(team_header)
-            
-            # Team number and title
-            ax.text(x, y - 0.3, f"Team {team.team_number}", 
-                   fontsize=16, fontweight='bold', ha='center', va='center',
-                   color='white')
-            
-            # Member count badge
-            ax.text(x, y - 0.9, f"{team.size} members", 
-                   fontsize=12, ha='center', va='center',
-                   color=color, weight='medium',
-                   bbox=dict(boxstyle="round,pad=0.3", facecolor='white', 
-                           edgecolor=color, alpha=0.9))
-            
-            # All team members with full names
+
+            # Team header
+            ax.text(
+                x + card_width / 2,
+                y + card_height - 0.3,
+                f"Team {team.team_number}",
+                fontsize=14,
+                fontweight="bold",
+                ha="center",
+                va="center",
+                color="white",
+            )
+
+            ax.text(
+                x + card_width / 2,
+                y + card_height - 0.6,
+                f"({team.size} members)",
+                fontsize=10,
+                ha="center",
+                va="center",
+                color="white",
+                alpha=0.9,
+            )
+
+            # Team members - show all names
+            member_start_y = y + card_height - 1.0
+            line_height = 0.25
+
             for j, member in enumerate(team.members):
-                member_y = y - 1.4 - j * 0.28
-                
-                # Alternate background for readability
-                if j % 2 == 0:
-                    member_bg = FancyBboxPatch((x - card_width/2 + 0.1, member_y - 0.12), 
-                                             card_width - 0.2, 0.24,
-                                             boxstyle="round,pad=0.05",
-                                             facecolor='white', alpha=0.6)
-                    ax.add_patch(member_bg)
-                
-                # Full name without truncation
-                ax.text(x, member_y, f"• {member.name}", 
-                       fontsize=10, ha='center', va='center',
-                       color='#2C3E50', weight='medium')
-        
-        # Professional footer
-        footer_y = 0.5
-        footer_text = "Generated by Team Picker • github.com/mabreyes/team-picker"
-        ax.text(cols * 2.5, footer_y, footer_text, 
-               fontsize=10, ha='center', va='center',
-               color='#7F8C8D', style='italic')
-        
-        # Save with high quality
-        plt.tight_layout()
-        plt.savefig(file_path, dpi=300, bbox_inches='tight', 
-                   facecolor='#FAFAFA', edgecolor='none',
-                   pad_inches=0.2)
+                member_y = member_start_y - j * line_height
+                ax.text(
+                    x + 0.15,
+                    member_y,
+                    f"• {member.name}",
+                    fontsize=9,
+                    ha="left",
+                    va="center",
+                    color="white",
+                    fontweight="500",
+                )
+
+        # Footer with GitHub link
+        footer_text = "Generated by github.com/mabreyes/team-picker"
+        ax.text(
+            5,
+            0.3,
+            footer_text,
+            fontsize=10,
+            ha="center",
+            va="center",
+            alpha=0.6,
+            style="italic",
+        )
+
+        # Save the image
+        image_file = output_dir / f"{filename}.png"
+        plt.savefig(image_file, bbox_inches="tight", pad_inches=0.2)
         plt.close()
-    
-    def export_students_as_image(self, students: List[Student], file_path: str) -> None:
-        """Export student list as a professional image."""
-        # Calculate layout
-        students_per_col = 20
-        cols = (len(students) + students_per_col - 1) // students_per_col
-        
-        fig_width = max(12, cols * 6)
-        fig_height = max(14, students_per_col * 0.6 + 4)
-        
+
+        return image_file
+
+    def export_student_list(
+        self, students: List[Student], filename: str, output_dir: Path
+    ) -> Path:
+        """Export student list as a professional image.
+
+        Args:
+            students: List of students to export
+            filename: Base filename (without extension)
+            output_dir: Directory to save the file
+
+        Returns:
+            Path to the created image file
+        """
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Dynamic sizing based on student count
+        num_students = len(students)
+        cols = 3
+        rows = math.ceil(num_students / cols)
+
+        fig_width = 16
+        fig_height = max(12, rows * 0.4 + 4)
+
         fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-        ax.set_xlim(0, cols * 6)
-        ax.set_ylim(0, fig_height)
-        ax.axis('off')
-        
-        # Gradient background
-        gradient = np.linspace(0, 1, 256).reshape(256, -1)
-        gradient = np.vstack((gradient, gradient))
-        ax.imshow(gradient, extent=[0, cols * 6, 0, fig_height], 
-                 aspect='auto', cmap='Greens', alpha=0.1)
-        
-        # Professional header
-        header_y = fig_height - 2
-        ax.text(cols * 3, header_y, f"Student Directory", 
-               fontsize=26, fontweight='bold', ha='center',
-               color='#2C3E50')
-        
-        ax.text(cols * 3, header_y - 0.7, f"{len(students)} DLSU Students", 
-               fontsize=16, ha='center',
-               color='#34495E', style='italic')
-        
-        # Students in professional columns
-        start_y = fig_height - 3.5
-        
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.axis("off")
+
+        # Header
+        ax.text(
+            5,
+            9.5,
+            "Student List",
+            fontsize=24,
+            fontweight="bold",
+            ha="center",
+            va="center",
+        )
+        ax.text(
+            5,
+            9,
+            f"Total Students: {num_students}",
+            fontsize=14,
+            ha="center",
+            va="center",
+            alpha=0.7,
+        )
+
+        # Student list in columns
+        col_width = 3
+        start_x = (10 - cols * col_width) / 2
+        start_y = 8.2
+
         for i, student in enumerate(students):
-            col = i // students_per_col
-            row = i % students_per_col
-            
-            x = col * 6 + 3
-            y = start_y - row * 0.55
-            
-            # Alternating row backgrounds
+            col = i % cols
+            row = i // cols
+
+            x = start_x + col * col_width
+            y = start_y - row * 0.3
+
+            # Alternate row colors for readability
             if row % 2 == 0:
-                row_bg = FancyBboxPatch((col * 6 + 0.2, y - 0.2), 5.6, 0.4,
-                                      boxstyle="round,pad=0.05",
-                                      facecolor='white', alpha=0.6)
-                ax.add_patch(row_bg)
-            
-            # Student number and name
-            ax.text(x, y, f"{i+1:2d}. {student.name}", 
-                   fontsize=11, ha='center', va='center',
-                   color='#2C3E50', weight='medium')
-        
-        # Footer
-        footer_y = 0.5
-        ax.text(cols * 3, footer_y, "DLSU Student Directory • github.com/mabreyes/team-picker", 
-               fontsize=12, ha='center',
-               color='#7F8C8D', style='italic')
-        
-        plt.tight_layout()
-        plt.savefig(file_path, dpi=300, bbox_inches='tight',
-                   facecolor='#FAFAFA', edgecolor='none',
-                   pad_inches=0.2)
+                bg_color = "#F8F9FA"
+            else:
+                bg_color = "#FFFFFF"
+
+            # Background for readability
+            bg_rect = patches.Rectangle(
+                (x - 0.1, y - 0.1),
+                col_width - 0.2,
+                0.25,
+                facecolor=bg_color,
+                alpha=0.8,
+                zorder=0,
+            )
+            ax.add_patch(bg_rect)
+
+            ax.text(
+                x,
+                y,
+                f"{i+1:2d}. {student.name}",
+                fontsize=10,
+                ha="left",
+                va="center",
+                fontweight="500",
+            )
+
+        # Footer with GitHub link
+        footer_text = "Generated by github.com/mabreyes/team-picker"
+        ax.text(
+            5,
+            0.5,
+            footer_text,
+            fontsize=10,
+            ha="center",
+            va="center",
+            alpha=0.6,
+            style="italic",
+        )
+
+        # Save the image
+        image_file = output_dir / f"{filename}.png"
+        plt.savefig(image_file, bbox_inches="tight", pad_inches=0.2)
         plt.close()
+
+        return image_file
 
 
 class OutputFormatter:
-    """Handles text output formatting."""
-    
+    """Handles text output formatting for console display."""
+
     @staticmethod
-    def format_result(result: TeamAssignmentResult, use_names: bool = True) -> str:
-        """Format team assignment result for display."""
+    def format_result(result: TeamAssignmentResult) -> str:
+        """Format team assignment result for console output.
+
+        Args:
+            result: Team assignment result to format
+
+        Returns:
+            Formatted string representation
+        """
         lines = []
         lines.append("=" * 60)
         lines.append("TEAM ASSIGNMENT RESULTS")
         lines.append("=" * 60)
-        
-        if result.method == AssignmentMethod.BY_SIZE:
-            lines.append(f"Target team size: {result.requested_value}")
-            lines.append(f"Complete teams: {result.complete_teams}")
-            if result.remaining_students > 0:
-                lines.append(f"Remaining students: {result.remaining_students}")
-        else:
-            lines.append(f"Number of teams: {result.num_teams}")
-            lines.append(f"Base team size: {result.base_team_size}")
-            if result.teams_with_extra > 0:
-                lines.append(f"Teams with extra member: {result.teams_with_extra}")
-        
-        lines.append(f"Total students: {result.total_students}")
-        lines.append("-" * 60)
-        
+        lines.append(f"Method: {result.method.value.replace('_', ' ').title()}")
+        lines.append(f"Total Students: {result.total_students}")
+        lines.append(f"Number of Teams: {result.num_teams}")
+        lines.append(f"Base Team Size: {result.base_team_size}")
+        lines.append(f"Timestamp: {result.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append("")
+
         for team in result.teams:
-            lines.append(f"\n{team}:")
-            for i, student in enumerate(team.members, 1):
-                if use_names:
-                    lines.append(f"  {i}. {student}")
-                else:
-                    lines.append(f"  {i}. {student.email}")
-        
+            lines.append(f"Team {team.team_number} ({team.size} members):")
+            lines.append("-" * 30)
+            for i, member in enumerate(team.members, 1):
+                lines.append(f"  {i:2d}. {member.name}")
+            lines.append("")
+
         return "\n".join(lines)
-    
-    @staticmethod
-    def format_students(students: List[Student]) -> str:
-        """Format student list for display."""
-        lines = []
-        lines.append(f"Student List ({len(students)} students)")
-        lines.append("-" * 40)
-        
-        for i, student in enumerate(students, 1):
-            lines.append(f"{i:2d}. {student}")
-        
-        return "\n".join(lines) 

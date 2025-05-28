@@ -1,30 +1,38 @@
 # 🎯 Team Picker
 
-A Pythonic team assignment application following **Single Responsibility Principle (SRP)** with JSON and image export capabilities. Available as both **command-line application** and **web interface**.
+A Pythonic team assignment application following **Single Responsibility
+Principle (SRP)** with JSON and image export capabilities. Available as both
+**command-line application** and **web interface**.
 
 ## ✨ Features
 
 ### **Core Functionality**
-- **Two Assignment Methods:**
-  - Create teams by specifying team size (e.g., teams of 4 people each)
-  - Create teams by specifying number of teams (e.g., create 6 teams total)
+
+-   **Two Assignment Methods:**
+    -   Create teams by specifying team size (e.g., teams of 4 people each)
+    -   Create teams by specifying number of teams (e.g., create 6 teams total)
 
 ### **Multiple Interfaces**
-- **🌐 Web Application:** Modern, minimalist interface with drag-and-drop file upload
-- **💻 Command Line:** Python scripts for automation and batch processing
+
+-   **🌐 Web Application:** Modern, minimalist interface with drag-and-drop file
+    upload
+-   **💻 Command Line:** Python scripts for automation and batch processing
 
 ### **Enhanced Export Options**
-- **JSON Export:** Structured data with metadata for integration
-- **Image Export:** Visual team assignments as PNG images showing **all student names**
-- **Text Display:** Formatted console output with readable names
-- **File Management:** Organized output directory structure
+
+-   **JSON Export:** Structured data with metadata for integration
+-   **Image Export:** Visual team assignments as PNG images showing **all
+    student names**
+-   **Text Display:** Formatted console output with readable names
+-   **File Management:** Organized output directory structure
 
 ### **Architecture Benefits**
-- **Single Responsibility Principle:** Each class handles one specific concern
-- **Dependency Injection:** Loose coupling between components
-- **Type Hints:** Full typing support for better IDE experience
-- **Dataclasses:** Clean, immutable data structures
-- **Modern Design:** Host Grotesk typography with professional styling
+
+-   **Single Responsibility Principle:** Each class handles one specific concern
+-   **Dependency Injection:** Loose coupling between components
+-   **Type Hints:** Full typing support for better IDE experience
+-   **Dataclasses:** Clean, immutable data structures
+-   **Modern Design:** Host Grotesk typography with professional styling
 
 ## 📁 Project Structure
 
@@ -48,6 +56,7 @@ team-picker/
 ## 🌐 Web Application
 
 ### Quick Start (Web)
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -59,14 +68,16 @@ python app.py
 ```
 
 ### Features
-- **🎨 Modern Design:** Minimalist interface with Host Grotesk font
-- **📁 Drag & Drop:** Easy file upload for student lists (.txt and .rtf files)
-- **👀 Live Preview:** See students before creating teams
-- **📊 Visual Results:** Teams displayed in cards and professional images
-- **⬇️ Downloads:** Direct download of JSON and PNG exports
-- **📱 Responsive:** Works on desktop, tablet, and mobile
+
+-   **🎨 Modern Design:** Minimalist interface with Host Grotesk font
+-   **📁 Drag & Drop:** Easy file upload for student lists (.txt and .rtf files)
+-   **👀 Live Preview:** See students before creating teams
+-   **📊 Visual Results:** Teams displayed in cards and professional images
+-   **⬇️ Downloads:** Direct download of JSON and PNG exports
+-   **📱 Responsive:** Works on desktop, tablet, and mobile
 
 ### Web Interface Flow
+
 1. **Upload student list** (.txt or .rtf file with emails) or use sample data
 2. **Preview students** with automatic name formatting
 3. **Configure teams** (by count or size)
@@ -76,6 +87,7 @@ python app.py
 ## 💻 Command Line Interface
 
 ### Quick Start (CLI)
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -102,19 +114,23 @@ maria.garcia@university.edu
 ```
 
 Names are automatically formatted from emails:
-- `john.doe@university.edu` → `John Doe`
-- `samantha.michaela.bautista@university.edu` → `Samantha Michaela Bautista`
+
+-   `john.doe@university.edu` → `John Doe`
+-   `samantha.michaela.bautista@university.edu` → `Samantha Michaela Bautista`
 
 **Supported formats:**
-- Any email address with @ symbol
-- Names extracted from the part before @
-- Underscores converted to spaces
-- Automatic title case formatting
+
+-   Any email address with @ symbol
+-   Names extracted from the part before @
+-   Underscores converted to spaces
+-   Automatic title case formatting
 
 ## 📄 Supported File Formats
 
 ### Text Files (.txt)
+
 Plain text files with one email per line:
+
 ```txt
 john.doe@university.edu
 jane.smith@university.edu
@@ -122,16 +138,21 @@ alex.johnson@university.edu
 ```
 
 ### Rich Text Format (.rtf)
-RTF files created by word processors like Microsoft Word, Google Docs, or Apple Pages:
-- Automatically extracts plain text from RTF formatting
-- Ignores formatting codes and focuses on email content
-- Supports standard RTF files from any word processor
 
-**Note:** RTF support requires the `striprtf` library (automatically installed with requirements.txt)
+RTF files created by word processors like Microsoft Word, Google Docs, or Apple
+Pages:
+
+-   Automatically extracts plain text from RTF formatting
+-   Ignores formatting codes and focuses on email content
+-   Supports standard RTF files from any word processor
+
+**Note:** RTF support requires the `striprtf` library (automatically installed
+with requirements.txt)
 
 ## 🔧 Customization
 
 ### **Add New Export Format**
+
 ```python
 # In services.py
 class NewExportService:
@@ -148,6 +169,7 @@ class TeamPickerApp:
 ```
 
 ### **Custom Student Data Source**
+
 ```python
 # Extend StudentRepository in services.py
 class DatabaseStudentRepository(StudentRepository):
@@ -159,26 +181,27 @@ class DatabaseStudentRepository(StudentRepository):
 ## 🧪 Error Handling
 
 The application includes comprehensive validation:
-- File existence checks
-- Team size validation
-- Student count validation
-- Type checking with hints
-- Graceful error messages
+
+-   File existence checks
+-   Team size validation
+-   Student count validation
+-   Type checking with hints
+-   Graceful error messages
 
 ## 📈 Performance
 
-- **Lazy Loading:** Students loaded only when needed
-- **Efficient Algorithms:** O(n) team assignment
-- **Memory Conscious:** Generators where appropriate
-- **Path Handling:** Modern pathlib usage
+-   **Lazy Loading:** Students loaded only when needed
+-   **Efficient Algorithms:** O(n) team assignment
+-   **Memory Conscious:** Generators where appropriate
+-   **Path Handling:** Modern pathlib usage
 
 ## 🎨 Code Quality
 
-- **Type Hints:** Full typing support
-- **Docstrings:** Comprehensive documentation
-- **SRP:** Single responsibility per class
-- **DRY:** No code duplication
-- **SOLID:** Following SOLID principles
+-   **Type Hints:** Full typing support
+-   **Docstrings:** Comprehensive documentation
+-   **SRP:** Single responsibility per class
+-   **DRY:** No code duplication
+-   **SOLID:** Following SOLID principles
 
 ## 🔄 Migration from Old Version
 
@@ -203,4 +226,4 @@ Educational use. Feel free to modify and extend.
 
 ---
 
-**Happy team building with enhanced exports! 🎯📊🖼️** 
+**Happy team building with enhanced exports! 🎯📊🖼️**
