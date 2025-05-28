@@ -295,159 +295,156 @@ class ImageExportService:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Calculate dynamic sizing based on content
-        max_team_size = max(team.size for team in result.teams)
         num_teams = len(result.teams)
 
-        # Dynamic figure sizing
-        base_width = 16
-        base_height = max(12, num_teams * 2 + max_team_size * 0.5)
+        # Optimized figure sizing for professional layout
+        fig_width = 11  # Standard letter width
+        fig_height = max(8.5, num_teams * 1.2 + 3)  # Dynamic height
 
-        fig, ax = plt.subplots(figsize=(base_width, base_height))
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
         ax.set_xlim(0, 10)
         ax.set_ylim(0, 10)
         ax.axis("off")
 
-        # Color palette for teams
-        colors = [
-            "#FF6B6B",
-            "#4ECDC4",
-            "#45B7D1",
-            "#96CEB4",
-            "#FFEAA7",
-            "#DDA0DD",
-            "#98D8C8",
-            "#F7DC6F",
-            "#BB8FCE",
-            "#85C1E9",
-            "#F8C471",
-            "#82E0AA",
-            "#F1948A",
-            "#85C1E9",
-            "#D7BDE2",
-        ]
+        # Set clean white background
+        fig.patch.set_facecolor("white")
 
-        # Header
-        header_text = (
-            f"Team Assignment Results - {result.method.value.replace('_', ' ').title()}"
-        )
+        # Professional header with minimal styling
         ax.text(
             5,
             9.5,
-            header_text,
-            fontsize=20,
-            fontweight="bold",
+            "Team Assignment Results",
+            fontsize=24,
+            fontweight="300",  # Light weight for modern look
             ha="center",
             va="center",
+            color="#2C3E50",  # Professional dark blue-gray
         )
 
-        # Metadata
+        # Minimal metadata line
+        method_display = result.method.value.replace("_", " ").title()
         metadata_text = (
-            f"Total Students: {result.total_students} | "
-            f"Teams: {result.num_teams} | "
-            f"Base Size: {result.base_team_size}"
+            f"{method_display} • {result.total_students} Students • "
+            f"{result.num_teams} Teams"
         )
-        ax.text(5, 9, metadata_text, fontsize=12, ha="center", va="center", alpha=0.7)
+        ax.text(
+            5,
+            9.1,
+            metadata_text,
+            fontsize=12,
+            ha="center",
+            va="center",
+            color="#7F8C8D",  # Light gray
+            fontweight="400",
+        )
 
-        # Calculate layout
-        cols = min(3, num_teams)
+        # Add subtle separator line
+        ax.plot([2, 8], [8.8, 8.8], color="#E5E5E5", linewidth=1.5, alpha=0.8)
 
-        card_width = 2.8
-        card_height = max(2.5, max_team_size * 0.3 + 1.5)
+        # Calculate grid layout for teams
+        max_cols = 3 if num_teams > 6 else 2
+        cols = min(max_cols, num_teams)
+        rows = math.ceil(num_teams / cols)
 
-        start_x = (10 - (cols * card_width + (cols - 1) * 0.3)) / 2
-        start_y = 8 - card_height
+        # Professional spacing
+        section_width = 6
+        section_height = 6
+        start_x = (10 - section_width) / 2
+        start_y = 8.2
+
+        team_width = section_width / cols - 0.3
+        team_spacing_x = section_width / cols
+        team_spacing_y = section_height / max(rows, 1)
 
         for i, team in enumerate(result.teams):
             row = i // cols
             col = i % cols
 
-            x = start_x + col * (card_width + 0.3)
-            y = start_y - row * (card_height + 0.4)
+            x = start_x + col * team_spacing_x
+            y = start_y - row * team_spacing_y
 
-            # Team card with gradient effect
-            color = colors[i % len(colors)]
+            # Minimal team container with subtle border
+            container_height = min(team_spacing_y - 0.2, len(team.members) * 0.22 + 0.8)
 
-            # Main card
-            card = patches.FancyBboxPatch(
-                (x, y),
-                card_width,
-                card_height,
-                boxstyle="round,pad=0.05",
-                facecolor=color,
-                edgecolor="white",
-                linewidth=2,
-                alpha=0.9,
+            # Clean background rectangle
+            bg_rect = patches.Rectangle(
+                (x - 0.05, y - container_height + 0.05),
+                team_width + 0.1,
+                container_height,
+                facecolor="#FAFAFA",  # Very light gray background
+                edgecolor="#E1E8ED",  # Subtle border
+                linewidth=1,
+                alpha=0.7,
             )
-            ax.add_patch(card)
+            ax.add_patch(bg_rect)
 
-            # Shadow effect
-            shadow = patches.FancyBboxPatch(
-                (x + 0.05, y - 0.05),
-                card_width,
-                card_height,
-                boxstyle="round,pad=0.05",
-                facecolor="gray",
-                alpha=0.3,
-                zorder=0,
-            )
-            ax.add_patch(shadow)
-
-            # Team header
+            # Team number with minimal styling
             ax.text(
-                x + card_width / 2,
-                y + card_height - 0.3,
+                x + team_width / 2,
+                y - 0.1,
                 f"Team {team.team_number}",
                 fontsize=14,
-                fontweight="bold",
+                fontweight="600",  # Semi-bold
                 ha="center",
-                va="center",
-                color="white",
+                va="top",
+                color="#2C3E50",
             )
 
+            # Member count in subtle text
             ax.text(
-                x + card_width / 2,
-                y + card_height - 0.6,
-                f"({team.size} members)",
+                x + team_width / 2,
+                y - 0.35,
+                f"{team.size} members",
                 fontsize=10,
                 ha="center",
-                va="center",
-                color="white",
-                alpha=0.9,
+                va="top",
+                color="#95A5A6",
+                fontweight="400",
             )
 
-            # Team members - show all names
-            member_start_y = y + card_height - 1.0
-            line_height = 0.25
+            # Team members in clean list format
+            member_start_y = y - 0.6
+            line_height = 0.22
 
             for j, member in enumerate(team.members):
                 member_y = member_start_y - j * line_height
+
+                # Clean member text without bullets
                 ax.text(
-                    x + 0.15,
+                    x + 0.1,
                     member_y,
-                    f"• {member.name}",
+                    f"{j+1}. {member.name}",
                     fontsize=9,
                     ha="left",
                     va="center",
-                    color="white",
-                    fontweight="500",
+                    color="#34495E",  # Professional dark gray
+                    fontweight="400",
                 )
 
-        # Footer with GitHub link
-        footer_text = "Generated by github.com/mabreyes/team-picker"
+        # Minimal footer
+        timestamp = result.timestamp.strftime("%B %d, %Y at %H:%M")
+        footer_text = f"Generated on {timestamp}"
         ax.text(
             5,
-            0.3,
+            0.5,
             footer_text,
-            fontsize=10,
+            fontsize=9,
             ha="center",
             va="center",
-            alpha=0.6,
-            style="italic",
+            color="#BDC3C7",
+            fontweight="300",
         )
 
-        # Save the image
+        # Save with high quality for professional use
         image_file = output_dir / f"{filename}.png"
-        plt.savefig(image_file, bbox_inches="tight", pad_inches=0.2)
+        plt.savefig(
+            image_file,
+            bbox_inches="tight",
+            pad_inches=0.3,
+            facecolor="white",
+            edgecolor="none",
+            dpi=300,  # High DPI for crisp text
+        )
         plt.close()
 
         return image_file
@@ -467,94 +464,136 @@ class ImageExportService:
         """
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Dynamic sizing based on student count
+        # Professional sizing based on student count
         num_students = len(students)
-        cols = 3
+
+        # Optimize column layout based on student count
+        if num_students <= 20:
+            cols = 2
+        elif num_students <= 50:
+            cols = 3
+        else:
+            cols = 4
+
         rows = math.ceil(num_students / cols)
 
-        fig_width = 16
-        fig_height = max(12, rows * 0.4 + 4)
+        # Standard professional dimensions
+        fig_width = 11  # Letter width
+        fig_height = max(8.5, rows * 0.35 + 4)
 
         fig, ax = plt.subplots(figsize=(fig_width, fig_height))
         ax.set_xlim(0, 10)
         ax.set_ylim(0, 10)
         ax.axis("off")
 
-        # Header
+        # Set clean white background
+        fig.patch.set_facecolor("white")
+
+        # Professional header
         ax.text(
             5,
             9.5,
-            "Student List",
+            "Student Directory",
             fontsize=24,
-            fontweight="bold",
+            fontweight="300",
             ha="center",
             va="center",
-        )
-        ax.text(
-            5,
-            9,
-            f"Total Students: {num_students}",
-            fontsize=14,
-            ha="center",
-            va="center",
-            alpha=0.7,
+            color="#2C3E50",
         )
 
-        # Student list in columns
-        col_width = 3
-        start_x = (10 - cols * col_width) / 2
+        # Metadata line
+        ax.text(
+            5,
+            9.1,
+            f"Total Students: {num_students}",
+            fontsize=12,
+            ha="center",
+            va="center",
+            color="#7F8C8D",
+            fontweight="400",
+        )
+
+        # Add subtle separator line
+        ax.plot([2, 8], [8.8, 8.8], color="#E5E5E5", linewidth=1.5, alpha=0.8)
+
+        # Professional column layout
+        section_width = 7
+        start_x = (10 - section_width) / 2
         start_y = 8.2
+
+        col_width = section_width / cols
+        line_height = 0.3
 
         for i, student in enumerate(students):
             col = i % cols
             row = i // cols
 
             x = start_x + col * col_width
-            y = start_y - row * 0.3
+            y = start_y - row * line_height
 
-            # Alternate row colors for readability
+            # Subtle alternating background for readability
             if row % 2 == 0:
-                bg_color = "#F8F9FA"
-            else:
-                bg_color = "#FFFFFF"
+                # Very subtle background rectangle
+                bg_rect = patches.Rectangle(
+                    (x - 0.05, y - line_height / 2 + 0.02),
+                    col_width - 0.1,
+                    line_height - 0.04,
+                    facecolor="#FAFAFA",
+                    edgecolor="none",
+                    alpha=0.5,
+                    zorder=0,
+                )
+                ax.add_patch(bg_rect)
 
-            # Background for readability
-            bg_rect = patches.Rectangle(
-                (x - 0.1, y - 0.1),
-                col_width - 0.2,
-                0.25,
-                facecolor=bg_color,
-                alpha=0.8,
-                zorder=0,
+            # Clean numbered student list
+            ax.text(
+                x + 0.1,
+                y,
+                f"{i+1:3d}.",
+                fontsize=9,
+                ha="left",
+                va="center",
+                color="#95A5A6",
+                fontweight="400",
             )
-            ax.add_patch(bg_rect)
 
             ax.text(
-                x,
+                x + 0.4,
                 y,
-                f"{i+1:2d}. {student.name}",
+                student.name,
                 fontsize=10,
                 ha="left",
                 va="center",
-                fontweight="500",
+                color="#34495E",
+                fontweight="400",
             )
 
-        # Footer with GitHub link
-        footer_text = "Generated by github.com/mabreyes/team-picker"
+        # Professional footer with timestamp
+        from datetime import datetime
+
+        timestamp = datetime.now().strftime("%B %d, %Y at %H:%M")
+        footer_text = f"Generated on {timestamp}"
         ax.text(
             5,
             0.5,
             footer_text,
-            fontsize=10,
+            fontsize=9,
             ha="center",
             va="center",
-            alpha=0.6,
-            style="italic",
+            color="#BDC3C7",
+            fontweight="300",
         )
 
-        # Save the image
+        # Save with high quality for professional use
         image_file = output_dir / f"{filename}.png"
-        plt.savefig(image_file, bbox_inches="tight", pad_inches=0.2)
+        plt.savefig(
+            image_file,
+            bbox_inches="tight",
+            pad_inches=0.3,
+            facecolor="white",
+            edgecolor="none",
+            dpi=300,
+        )
         plt.close()
 
         return image_file
