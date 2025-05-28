@@ -392,6 +392,57 @@
             justify-content: center;
             margin-top: 2rem;
         }
+
+        /* Selected File Display */
+        .selected-file {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            background: var(--surface);
+        }
+
+        .selected-file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .file-icon {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+
+        .file-size {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            background: var(--background);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .remove-file {
+            background: none;
+            border: none;
+            font-size: 1.125rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0.25rem;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .remove-file:hover {
+            background: var(--error-color);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -399,7 +450,7 @@
         <!-- Header -->
         <div class="header">
             <h1>🎯 Team Picker</h1>
-            <p>Create balanced teams with professional exports</p>
+            <p>Create balanced teams with exportable image and JSON</p>
         </div>
 
         <!-- Upload Section -->
@@ -412,10 +463,18 @@
             <div class="form-group">
                 <div class="file-upload">
                     <input type="file" id="fileInput" class="file-input" accept=".txt,.rtf">
-                    <label for="fileInput" class="file-upload-label">
-                        <div class="file-upload-text">📄 Choose student list file</div>
-                        <div class="file-upload-subtext">or drag and drop a .txt or .rtf file</div>
+                    <label for="fileInput" class="file-upload-label" id="fileUploadLabel">
+                        <div class="file-upload-text" id="fileUploadText">📄 Choose student list file</div>
+                        <div class="file-upload-subtext" id="fileUploadSubtext">or drag and drop a .txt or .rtf file</div>
                     </label>
+                </div>
+                <div id="selectedFile" class="selected-file hidden">
+                    <div class="selected-file-info">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name" id="selectedFileName"></span>
+                        <span class="file-size" id="selectedFileSize"></span>
+                        <button type="button" class="remove-file" id="removeFile">✕</button>
+                    </div>
                 </div>
             </div>
 
@@ -534,6 +593,11 @@
         const teamImage = document.getElementById('teamImage');
         const downloadJson = document.getElementById('downloadJson');
         const downloadImage = document.getElementById('downloadImage');
+        const fileUploadLabel = document.getElementById('fileUploadLabel');
+        const selectedFile = document.getElementById('selectedFile');
+        const selectedFileName = document.getElementById('selectedFileName');
+        const selectedFileSize = document.getElementById('selectedFileSize');
+        const removeFile = document.getElementById('removeFile');
 
         // Event Listeners
         fileInput.addEventListener('change', handleFileSelect);
@@ -541,6 +605,7 @@
         sampleBtn.addEventListener('click', loadSampleData);
         assignmentMethod.addEventListener('change', updateMethodLabel);
         createTeamsBtn.addEventListener('click', createTeams);
+        removeFile.addEventListener('click', removeSelectedFile);
 
         // Utility Functions
         function showStatus(element, message, type) {
@@ -563,8 +628,29 @@
 
         // File Handling
         function handleFileSelect() {
-            uploadBtn.disabled = !fileInput.files.length;
+            const file = fileInput.files[0];
+            uploadBtn.disabled = !file;
             clearStatus(uploadStatus);
+            
+            if (file) {
+                // Show selected file info
+                selectedFileName.textContent = file.name;
+                selectedFileSize.textContent = formatFileSize(file.size);
+                selectedFile.classList.remove('hidden');
+                fileUploadLabel.classList.add('hidden');
+            } else {
+                // Hide selected file info
+                selectedFile.classList.add('hidden');
+                fileUploadLabel.classList.remove('hidden');
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
         async function handleFileUpload() {
@@ -590,11 +676,18 @@
                     displayStudents();
                     const fileType = data.file_type ? ` (${data.file_type} file)` : '';
                     showStatus(uploadStatus, `✅ Successfully loaded ${data.count} students${fileType}`, 'success');
+                    
+                    // Keep the file display but update the upload button text
+                    uploadText.textContent = 'Upload Another File';
                 } else {
                     showStatus(uploadStatus, `❌ ${data.error}`, 'error');
+                    // Reset file display on error
+                    removeSelectedFile();
                 }
             } catch (error) {
                 showStatus(uploadStatus, `❌ Upload failed: ${error.message}`, 'error');
+                // Reset file display on error
+                removeSelectedFile();
             } finally {
                 setLoading(uploadText, uploadLoading, false);
                 uploadBtn.disabled = false;
@@ -666,55 +759,4 @@
                     displayTeamResults(data);
                     showStatus(teamStatus, `✅ Successfully created ${data.teams.length} teams`, 'success');
                 } else {
-                    showStatus(teamStatus, `❌ ${data.error}`, 'error');
-                }
-            } catch (error) {
-                showStatus(teamStatus, `❌ Failed to create teams: ${error.message}`, 'error');
-            } finally {
-                setLoading(createText, createLoading, false);
-                createTeamsBtn.disabled = false;
-            }
-        }
-
-        function displayTeamResults(data) {
-            const { teams, metadata, image_base64, download_links } = data;
-            currentTimestamp = metadata.timestamp;
-
-            // Update results subtitle
-            resultsSubtitle.textContent = `${metadata.num_teams} teams • ${metadata.total_students} students • ${metadata.method.replace('_', ' ')}`;
-
-            // Display teams
-            teamsContainer.innerHTML = teams.map(team => `
-                <div class="team-card">
-                    <div class="team-header">
-                        <div class="team-number">Team ${team.team_number}</div>
-                        <div class="team-size">${team.size} members</div>
-                    </div>
-                    <ul class="team-members">
-                        ${team.members.map(member => `
-                            <li class="team-member">
-                                <div class="member-name">${member.name}</div>
-                                <div class="member-email">${member.email}</div>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-            `).join('');
-
-            // Display image
-            teamImage.src = `data:image/png;base64,${image_base64}`;
-
-            // Set download links
-            downloadJson.href = download_links.json;
-            downloadImage.href = download_links.image;
-
-            // Show results
-            resultsSection.classList.remove('hidden');
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Initialize
-        updateMethodLabel();
-    </script>
-</body>
-</html> 
+                    showStatus(teamStatus, `
