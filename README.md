@@ -36,7 +36,7 @@ flexibility.
 
 ## 🆕 What's New
 
-### Version 2.0 Highlights
+### Highlights
 
 -   **🧪 Comprehensive Testing:** 160 test cases with 99% code coverage
 -   **🔧 Development Workflow:** Complete Makefile with pre-commit hooks
