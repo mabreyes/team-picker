@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Picker</title>
+    
+    <!-- Host Grotesk Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables for consistent theming */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --error-color: #dc2626;
+            --warning-color: #d97706;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+        }
+
+        /* Base styles with Host Grotesk */
+        .host-grotesk {
+            font-family: "Host Grotesk", sans-serif;
+            font-optical-sizing: auto;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Host Grotesk", sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Card Components */
+        .card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-size: 0.875rem;
+            background: var(--background);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 2rem;
+            border: 2px dashed var(--border);
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--surface);
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--primary-color);
+            background: var(--background);
+        }
+
+        .file-upload-text {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-upload-subtext {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--background);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        @media (max-width: 768px) {
+            .grid-cols-2, .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Teams Display */
+        .teams-container {
+            display: none;
+        }
+
+        .team-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .team-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .team-number {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .team-size {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            background: var(--background);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .team-members {
+            list-style: none;
+        }
+
+        .team-member {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .team-member:last-child {
+            border-bottom: none;
+        }
+
+        .member-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .member-email {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: rgb(34 197 94 / 0.1);
+            color: var(--success-color);
+            border: 1px solid rgb(34 197 94 / 0.2);
+        }
+
+        .status-error {
+            background: rgb(239 68 68 / 0.1);
+            color: var(--error-color);
+            border: 1px solid rgb(239 68 68 / 0.2);
+        }
+
+        .status-warning {
+            background: rgb(251 146 60 / 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgb(251 146 60 / 0.2);
+        }
+
+        /* Image Display */
+        .image-container {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .team-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        /* Student List Display */
+        .student-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            background: var(--surface);
+        }
+
+        .student-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .student-item:last-child {
+            border-bottom: none;
+        }
+
+        .download-section {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Team Picker</h1>
+            <p>Create balanced teams with professional exports</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Upload Student List</h2>
+                <p class="card-subtitle">Upload a .txt or .rtf file with one email address per line</p>
+            </div>
+
+            <div class="form-group">
+                <div class="file-upload">
+                    <input type="file" id="fileInput" class="file-input" accept=".txt,.rtf">
+                    <label for="fileInput" class="file-upload-label">
+                        <div class="file-upload-text">📄 Choose student list file</div>
+                        <div class="file-upload-subtext">or drag and drop a .txt or .rtf file</div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2">
+                <button id="uploadBtn" class="btn btn-primary" disabled>
+                    <span id="uploadText">Upload File</span>
+                    <span id="uploadLoading" class="loading hidden"></span>
+                </button>
+                <button id="sampleBtn" class="btn btn-secondary">
+                    Use Sample Data
+                </button>
+            </div>
+
+            <div id="uploadStatus" class="mt-4"></div>
+        </div>
+
+        <!-- Student List Preview -->
+        <div id="studentsPreview" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title">Students Loaded</h2>
+                <p class="card-subtitle" id="studentCount">0 students ready for team assignment</p>
+            </div>
+            <div id="studentList" class="student-list"></div>
+        </div>
+
+        <!-- Team Configuration -->
+        <div id="teamConfig" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title">Team Assignment</h2>
+                <p class="card-subtitle">Configure how you want to create teams</p>
+            </div>
+
+            <div class="grid grid-cols-2">
+                <div class="form-group">
+                    <label class="form-label" for="assignmentMethod">Assignment Method</label>
+                    <select id="assignmentMethod" class="form-select">
+                        <option value="by_count">Number of Teams</option>
+                        <option value="by_size">Team Size</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="assignmentValue" id="valueLabel">Number of Teams</label>
+                    <input type="number" id="assignmentValue" class="form-input" value="4" min="1">
+                </div>
+            </div>
+
+            <button id="createTeamsBtn" class="btn btn-primary">
+                <span id="createText">Create Teams</span>
+                <span id="createLoading" class="loading hidden"></span>
+            </button>
+
+            <div id="teamStatus" class="mt-4"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Team Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Team Assignment Results</h2>
+                    <p class="card-subtitle" id="resultsSubtitle"></p>
+                </div>
+                
+                <div id="teamsContainer" class="grid grid-cols-3"></div>
+                
+                <div class="download-section">
+                    <a id="downloadJson" class="btn btn-secondary" href="#" download>
+                        📄 Download JSON
+                    </a>
+                    <a id="downloadImage" class="btn btn-secondary" href="#" download>
+                        🖼️ Download Image
+                    </a>
+                </div>
+            </div>
+
+            <!-- Visual Export -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Visual Export</h2>
+                    <p class="card-subtitle">Professional team assignment visualization</p>
+                </div>
+                <div class="image-container">
+                    <img id="teamImage" class="team-image" alt="Team Assignment Visualization">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let currentStudents = [];
+        let currentTimestamp = null;
+
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const uploadText = document.getElementById('uploadText');
+        const uploadLoading = document.getElementById('uploadLoading');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const studentsPreview = document.getElementById('studentsPreview');
+        const studentCount = document.getElementById('studentCount');
+        const studentList = document.getElementById('studentList');
+        const teamConfig = document.getElementById('teamConfig');
+        const assignmentMethod = document.getElementById('assignmentMethod');
+        const assignmentValue = document.getElementById('assignmentValue');
+        const valueLabel = document.getElementById('valueLabel');
+        const createTeamsBtn = document.getElementById('createTeamsBtn');
+        const createText = document.getElementById('createText');
+        const createLoading = document.getElementById('createLoading');
+        const teamStatus = document.getElementById('teamStatus');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsSubtitle = document.getElementById('resultsSubtitle');
+        const teamsContainer = document.getElementById('teamsContainer');
+        const teamImage = document.getElementById('teamImage');
+        const downloadJson = document.getElementById('downloadJson');
+        const downloadImage = document.getElementById('downloadImage');
+
+        // Event Listeners
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', handleFileUpload);
+        sampleBtn.addEventListener('click', loadSampleData);
+        assignmentMethod.addEventListener('change', updateMethodLabel);
+        createTeamsBtn.addEventListener('click', createTeams);
+
+        // Utility Functions
+        function showStatus(element, message, type) {
+            element.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+        }
+
+        function clearStatus(element) {
+            element.innerHTML = '';
+        }
+
+        function setLoading(textEl, loadingEl, loading) {
+            if (loading) {
+                textEl.classList.add('hidden');
+                loadingEl.classList.remove('hidden');
+            } else {
+                textEl.classList.remove('hidden');
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // File Handling
+        function handleFileSelect() {
+            uploadBtn.disabled = !fileInput.files.length;
+            clearStatus(uploadStatus);
+        }
+
+        async function handleFileUpload() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            setLoading(uploadText, uploadLoading, true);
+            uploadBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentStudents = data.students;
+                    displayStudents();
+                    const fileType = data.file_type ? ` (${data.file_type} file)` : '';
+                    showStatus(uploadStatus, `✅ Successfully loaded ${data.count} students${fileType}`, 'success');
+                } else {
+                    showStatus(uploadStatus, `❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(uploadStatus, `❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                setLoading(uploadText, uploadLoading, false);
+                uploadBtn.disabled = false;
+            }
+        }
+
+        async function loadSampleData() {
+            setLoading(uploadText, uploadLoading, true);
+
+            try {
+                const response = await fetch('/api/sample-data');
+                const data = await response.json();
+
+                if (data.success) {
+                    currentStudents = data.students;
+                    displayStudents();
+                    showStatus(uploadStatus, `✅ Loaded ${data.count} sample students`, 'success');
+                }
+            } catch (error) {
+                showStatus(uploadStatus, `❌ Failed to load sample data: ${error.message}`, 'error');
+            } finally {
+                setLoading(uploadText, uploadLoading, false);
+            }
+        }
+
+        function displayStudents() {
+            studentCount.textContent = `${currentStudents.length} students ready for team assignment`;
+            
+            studentList.innerHTML = currentStudents.map((student, index) => 
+                `<div class="student-item">
+                    <div class="member-name">${index + 1}. ${student.name}</div>
+                    <div class="member-email">${student.email}</div>
+                </div>`
+            ).join('');
+
+            studentsPreview.classList.remove('hidden');
+            teamConfig.classList.remove('hidden');
+        }
+
+        function updateMethodLabel() {
+            const method = assignmentMethod.value;
+            valueLabel.textContent = method === 'by_count' ? 'Number of Teams' : 'Team Size';
+            assignmentValue.placeholder = method === 'by_count' ? 'e.g., 6' : 'e.g., 4';
+        }
+
+        async function createTeams() {
+            if (!currentStudents.length) return;
+
+            setLoading(createText, createLoading, true);
+            createTeamsBtn.disabled = true;
+            clearStatus(teamStatus);
+
+            try {
+                const response = await fetch('/api/create-teams', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        students: currentStudents,
+                        method: assignmentMethod.value,
+                        value: parseInt(assignmentValue.value)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTeamResults(data);
+                    showStatus(teamStatus, `✅ Successfully created ${data.teams.length} teams`, 'success');
+                } else {
+                    showStatus(teamStatus, `❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(teamStatus, `❌ Failed to create teams: ${error.message}`, 'error');
+            } finally {
+                setLoading(createText, createLoading, false);
+                createTeamsBtn.disabled = false;
+            }
+        }
+
+        function displayTeamResults(data) {
+            const { teams, metadata, image_base64, download_links } = data;
+            currentTimestamp = metadata.timestamp;
+
+            // Update results subtitle
+            resultsSubtitle.textContent = `${metadata.num_teams} teams • ${metadata.total_students} students • ${metadata.method.replace('_', ' ')}`;
+
+            // Display teams
+            teamsContainer.innerHTML = teams.map(team => `
+                <div class="team-card">
+                    <div class="team-header">
+                        <div class="team-number">Team ${team.team_number}</div>
+                        <div class="team-size">${team.size} members</div>
+                    </div>
+                    <ul class="team-members">
+                        ${team.members.map(member => `
+                            <li class="team-member">
+                                <div class="member-name">${member.name}</div>
+                                <div class="member-email">${member.email}</div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+            // Display image
+            teamImage.src = `data:image/png;base64,${image_base64}`;
+
+            // Set download links
+            downloadJson.href = download_links.json;
+            downloadImage.href = download_links.image;
+
+            // Show results
+            resultsSection.classList.remove('hidden');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize
+        updateMethodLabel();
+    </script>
+</body>
+</html> 

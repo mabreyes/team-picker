@@ -198,4 +198,11 @@ temp_*
 # Student data files (user-specific)
 student_list.txt
 students.txt
-*_students.txt 
+*_students.txt
+
+# Flask web application
+uploads/
+instance/
+*.db
+*.sqlite
+*.sqlite3 

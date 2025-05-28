@@ -6,6 +6,13 @@ matplotlib>=3.5.0
 Pillow>=9.0.0
 numpy>=1.21.0
 
+# Web application dependencies
+Flask>=2.3.0
+Werkzeug>=2.3.0
+
+# File parsing dependencies
+striprtf>=0.0.26  # For RTF file parsing
+
 # Python version: 3.8+
 # Standard library modules used:
 # - random
@@ -20,4 +27,14 @@ numpy>=1.21.0
 # pytest>=7.0.0
 # pytest-cov>=4.0.0
 # black>=22.0.0
-# mypy>=0.950 
+# mypy>=0.950
+
+# Development dependencies (optional)
+# flask-cors>=4.0.0  # If you need CORS support
+
+# Original comment
+# matplotlib: For professional image generation with charts and visualizations
+# Pillow: For image processing and manipulation
+# numpy: For gradient effects and advanced image processing
+# Flask: Web framework for the application
+# Werkzeug: WSGI utilities for Flask 

@@ -1,6 +1,6 @@
-# 🎯 Team Picker (Enhanced)
+# 🎯 Team Picker
 
-A Pythonic team assignment application following **Single Responsibility Principle (SRP)** with JSON and image export capabilities. Loads student data from a text file and provides flexible team assignment with multiple export formats.
+A Pythonic team assignment application following **Single Responsibility Principle (SRP)** with JSON and image export capabilities. Available as both **command-line application** and **web interface**.
 
 ## ✨ Features
 
@@ -8,6 +8,10 @@ A Pythonic team assignment application following **Single Responsibility Princip
 - **Two Assignment Methods:**
   - Create teams by specifying team size (e.g., teams of 4 people each)
   - Create teams by specifying number of teams (e.g., create 6 teams total)
+
+### **Multiple Interfaces**
+- **🌐 Web Application:** Modern, minimalist interface with drag-and-drop file upload
+- **💻 Command Line:** Python scripts for automation and batch processing
 
 ### **Enhanced Export Options**
 - **JSON Export:** Structured data with metadata for integration
@@ -20,7 +24,7 @@ A Pythonic team assignment application following **Single Responsibility Princip
 - **Dependency Injection:** Loose coupling between components
 - **Type Hints:** Full typing support for better IDE experience
 - **Dataclasses:** Clean, immutable data structures
-- **Pathlib:** Modern file path handling
+- **Modern Design:** Host Grotesk typography with professional styling
 
 ## 📁 Project Structure
 
@@ -29,7 +33,10 @@ team-picker/
 ├── models.py              # Data classes (Student, Team, TeamAssignmentResult)
 ├── services.py            # Service classes following SRP
 ├── team_picker_app.py     # Main application coordinator
-├── example.py             # Complete usage examples
+├── app.py                 # Flask web application
+├── templates/             # Web interface templates
+│   └── index.html        # Main web interface
+├── example.py             # Complete CLI usage examples
 ├── student_list.txt       # Your student data (create this file)
 ├── requirements.txt       # Dependencies
 ├── README.md             # This documentation
@@ -38,44 +45,46 @@ team-picker/
     └── images/          # PNG image files
 ```
 
-## 🏗️ Architecture (SRP)
+## 🌐 Web Application
 
-### **Data Models** (`models.py`)
-- `Student`: Represents a student with email and formatted name
-- `Team`: Represents a team with members and metadata
-- `TeamAssignmentResult`: Complete assignment result with statistics
-- `AssignmentMethod`: Enumeration for assignment types
-
-### **Services** (`services.py`)
-- `StudentRepository`: Handles loading students from text file
-- `TeamAssignmentService`: Core team assignment logic
-- `JsonExportService`: JSON file export functionality
-- `ImageExportService`: PNG image generation with **all names visible**
-- `OutputFormatter`: Text formatting for console display
-
-### **Application** (`team_picker_app.py`)
-- `TeamPickerApp`: Main coordinator using dependency injection
-
-## 🚀 Quick Start
-
-### 1. Install Dependencies
+### Quick Start (Web)
 ```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Start the web server
+python app.py
+
+# Open browser to http://localhost:5000
 ```
 
-### 2. Create Your Student List
-Create a `student_list.txt` file with one email per line:
+### Features
+- **🎨 Modern Design:** Minimalist interface with Host Grotesk font
+- **📁 Drag & Drop:** Easy file upload for student lists (.txt and .rtf files)
+- **👀 Live Preview:** See students before creating teams
+- **📊 Visual Results:** Teams displayed in cards and professional images
+- **⬇️ Downloads:** Direct download of JSON and PNG exports
+- **📱 Responsive:** Works on desktop, tablet, and mobile
 
-```txt
-john.doe@university.edu
-jane.smith@university.edu
-alex.johnson@university.edu
-maria.garcia@university.edu
-david.brown@university.edu
-```
+### Web Interface Flow
+1. **Upload student list** (.txt or .rtf file with emails) or use sample data
+2. **Preview students** with automatic name formatting
+3. **Configure teams** (by count or size)
+4. **View results** in interactive cards
+5. **Download exports** (JSON data + PNG visualization)
 
-### 3. Run the Example
+## 💻 Command Line Interface
+
+### Quick Start (CLI)
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Create your student list
+echo "john.doe@university.edu" > student_list.txt
+echo "jane.smith@university.edu" >> student_list.txt
+
+# Run example
 python example.py
 ```
 
@@ -101,6 +110,24 @@ Names are automatically formatted from emails:
 - Names extracted from the part before @
 - Underscores converted to spaces
 - Automatic title case formatting
+
+## 📄 Supported File Formats
+
+### Text Files (.txt)
+Plain text files with one email per line:
+```txt
+john.doe@university.edu
+jane.smith@university.edu
+alex.johnson@university.edu
+```
+
+### Rich Text Format (.rtf)
+RTF files created by word processors like Microsoft Word, Google Docs, or Apple Pages:
+- Automatically extracts plain text from RTF formatting
+- Ignores formatting codes and focuses on email content
+- Supports standard RTF files from any word processor
+
+**Note:** RTF support requires the `striprtf` library (automatically installed with requirements.txt)
 
 ## 🔧 Customization
 
