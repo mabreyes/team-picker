@@ -4,6 +4,7 @@
 # Core dependencies for image generation
 matplotlib>=3.5.0
 Pillow>=9.0.0
+numpy>=1.21.0
 
 # Python version: 3.8+
 # Standard library modules used:

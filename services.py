@@ -11,6 +11,8 @@ from typing import List, Optional
 from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.patches import FancyBboxPatch
+import numpy as np
 from io import BytesIO
 
 from models import Student, Team, TeamAssignmentResult, AssignmentMethod
@@ -156,110 +158,270 @@ class JsonExportService:
 
 
 class ImageExportService:
-    """Handles image export functionality."""
+    """Handles professional image export functionality."""
     
     def __init__(self, font_size: int = 12):
         self.font_size = font_size
+        # Professional color palette
         self.colors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+            '#3498DB',  # Beautiful Blue
+            '#E74C3C',  # Vibrant Red
+            '#2ECC71',  # Emerald Green
+            '#F39C12',  # Orange
+            '#9B59B6',  # Purple
+            '#1ABC9C',  # Turquoise
+            '#E67E22',  # Carrot
+            '#34495E',  # Dark Blue-Gray
+            '#F1C40F',  # Golden Yellow
+            '#E91E63',  # Pink
+            '#8E44AD',  # Violet
+            '#27AE60',  # Nephritis Green
         ]
+        
+        # Set professional style with macOS system fonts
+        plt.style.use('default')
+        
+        # Use macOS native fonts with fallbacks
+        font_family = [
+            'Helvetica Neue',  # Classic macOS font
+            'Helvetica',       # macOS fallback
+            'Arial',           # Cross-platform fallback
+            'DejaVu Sans',     # Linux fallback
+            'sans-serif'       # Final fallback
+        ]
+        
+        plt.rcParams.update({
+            'font.family': font_family,
+            'font.size': 10,
+            'font.weight': 'normal',
+            'axes.linewidth': 0,
+            'figure.facecolor': '#FAFAFA',
+            'axes.facecolor': '#FFFFFF'
+        })
     
     def export_teams_as_image(self, result: TeamAssignmentResult, file_path: str) -> None:
-        """Export team assignment result as an image using matplotlib."""
-        # Calculate figure size based on number of teams and max team size
+        """Export team assignment result as a professional image."""
+        # Calculate optimal layout
         max_team_size = max(team.size for team in result.teams)
-        teams_per_row = min(3, result.num_teams)
-        rows = (result.num_teams + teams_per_row - 1) // teams_per_row
         
-        # Dynamic figure sizing
-        fig_width = max(12, teams_per_row * 4)
-        fig_height = max(8, 3 + rows * (2 + max_team_size * 0.3))
+        # Determine grid layout for teams
+        if result.num_teams <= 3:
+            cols = result.num_teams
+            rows = 1
+        elif result.num_teams <= 6:
+            cols = 3
+            rows = 2
+        elif result.num_teams <= 9:
+            cols = 3
+            rows = 3
+        else:
+            cols = 4
+            rows = (result.num_teams + 3) // 4
+        
+        # Calculate figure size based on content
+        fig_width = max(16, cols * 5)
+        fig_height = max(10, 4 + rows * (3 + max_team_size * 0.4))
         
         fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-        ax.set_xlim(0, teams_per_row * 4)
+        ax.set_xlim(0, cols * 5)
         ax.set_ylim(0, fig_height)
         ax.axis('off')
         
-        # Title
-        title = f"Team Assignment Results - {result.method.value.replace('_', ' ').title()}"
-        ax.text(teams_per_row * 2, fig_height - 0.5, title, fontsize=16, fontweight='bold', ha='center')
+        # Beautiful gradient background
+        gradient = np.linspace(0, 1, 256).reshape(256, -1)
+        gradient = np.vstack((gradient, gradient))
+        ax.imshow(gradient, extent=[0, cols * 5, 0, fig_height], 
+                 aspect='auto', cmap='Blues', alpha=0.1)
         
-        # Metadata
-        metadata_text = (f"Total Students: {result.total_students} | "
-                        f"Teams: {result.num_teams} | "
+        # Professional header with shadow effect
+        header_y = fig_height - 1.5
+        
+        # Title shadow
+        title = f"Team Assignment Results"
+        ax.text(cols * 2.5 + 0.02, header_y - 0.02, title, 
+               fontsize=24, fontweight='bold', ha='center', va='center',
+               color='gray', alpha=0.5)
+        
+        # Main title
+        ax.text(cols * 2.5, header_y, title, 
+               fontsize=24, fontweight='bold', ha='center', va='center',
+               color='#2C3E50')
+        
+        # Subtitle with method info
+        method_text = f"{result.method.value.replace('_', ' ').title()}"
+        ax.text(cols * 2.5, header_y - 0.6, method_text, 
+               fontsize=16, ha='center', va='center',
+               color='#34495E', style='italic')
+        
+        # Professional metadata panel
+        metadata_y = header_y - 1.2
+        metadata_text = (f"Students: {result.total_students}  •  "
+                        f"Teams: {result.num_teams}  •  "
                         f"Base Size: {result.base_team_size}")
-        ax.text(teams_per_row * 2, fig_height - 1, metadata_text, fontsize=10, ha='center')
         
-        # Calculate layout
-        y_start = fig_height - 2
-        team_height = (fig_height - 3) / rows
+        # Metadata background
+        metadata_bg = FancyBboxPatch((0.5, metadata_y - 0.25), cols * 5 - 1, 0.5,
+                                   boxstyle="round,pad=0.1",
+                                   facecolor='white', edgecolor='#BDC3C7',
+                                   linewidth=1, alpha=0.9)
+        ax.add_patch(metadata_bg)
+        
+        ax.text(cols * 2.5, metadata_y, metadata_text, 
+               fontsize=14, ha='center', va='center',
+               color='#2C3E50', weight='medium')
+        
+        # Calculate team positioning
+        start_y = fig_height - 3.5
+        team_spacing_x = 5
+        team_spacing_y = 3 + max_team_size * 0.4
         
         for i, team in enumerate(result.teams):
-            row = i // teams_per_row
-            col = i % teams_per_row
+            row = i // cols
+            col = i % cols
             
-            x = 0.5 + (col * 4)
-            y = y_start - (row * team_height)
+            # Center teams in the last row if incomplete
+            if row == rows - 1:
+                teams_in_last_row = result.num_teams - (rows - 1) * cols
+                offset = (cols - teams_in_last_row) * team_spacing_x / 2
+                x = offset + col * team_spacing_x + 2.5
+            else:
+                x = col * team_spacing_x + 2.5
             
-            # Team box - dynamic height based on team size
-            box_height = min(team_height - 0.2, 0.5 + team.size * 0.25)
+            y = start_y - row * team_spacing_y
+            
+            # Team card dimensions
+            card_width = 4
+            card_height = min(2.5 + team.size * 0.35, team_spacing_y - 0.5)
+            
+            # Professional team card with shadow
+            shadow = FancyBboxPatch((x - card_width/2 + 0.05, y - card_height + 0.05), 
+                                  card_width, card_height,
+                                  boxstyle="round,pad=0.15",
+                                  facecolor='gray', alpha=0.2)
+            ax.add_patch(shadow)
+            
+            # Main team card
             color = self.colors[i % len(self.colors)]
-            rect = patches.Rectangle((x-0.4, y - box_height), 3.8, box_height, 
-                                   linewidth=2, edgecolor='black', 
-                                   facecolor=color, alpha=0.3)
-            ax.add_patch(rect)
+            team_card = FancyBboxPatch((x - card_width/2, y - card_height), 
+                                     card_width, card_height,
+                                     boxstyle="round,pad=0.15",
+                                     facecolor=color, alpha=0.2,
+                                     edgecolor=color, linewidth=2)
+            ax.add_patch(team_card)
             
-            # Team title
-            ax.text(x + 1.5, y - 0.2, f"Team {team.team_number}", 
-                   fontsize=12, fontweight='bold', ha='center')
+            # Team header background
+            header_height = 0.6
+            team_header = FancyBboxPatch((x - card_width/2, y - header_height), 
+                                       card_width, header_height,
+                                       boxstyle="round,pad=0.15",
+                                       facecolor=color, alpha=0.8)
+            ax.add_patch(team_header)
             
-            # Team members count
-            member_text = f"({team.size} members)"
-            ax.text(x + 1.5, y - 0.4, member_text, fontsize=10, ha='center')
+            # Team number and title
+            ax.text(x, y - 0.3, f"Team {team.team_number}", 
+                   fontsize=16, fontweight='bold', ha='center', va='center',
+                   color='white')
             
-            # All member names - no truncation
+            # Member count badge
+            ax.text(x, y - 0.9, f"{team.size} members", 
+                   fontsize=12, ha='center', va='center',
+                   color=color, weight='medium',
+                   bbox=dict(boxstyle="round,pad=0.3", facecolor='white', 
+                           edgecolor=color, alpha=0.9))
+            
+            # All team members with full names
             for j, member in enumerate(team.members):
-                # Use first name and last initial for space efficiency
-                name_parts = member.name.split()
-                if len(name_parts) > 1:
-                    display_name = f"{name_parts[0]} {name_parts[-1][0]}."
-                else:
-                    display_name = name_parts[0]
+                member_y = y - 1.4 - j * 0.28
                 
-                ax.text(x + 1.5, y - 0.6 - j * 0.2, display_name, 
-                       fontsize=8, ha='center')
+                # Alternate background for readability
+                if j % 2 == 0:
+                    member_bg = FancyBboxPatch((x - card_width/2 + 0.1, member_y - 0.12), 
+                                             card_width - 0.2, 0.24,
+                                             boxstyle="round,pad=0.05",
+                                             facecolor='white', alpha=0.6)
+                    ax.add_patch(member_bg)
+                
+                # Full name without truncation
+                ax.text(x, member_y, f"• {member.name}", 
+                       fontsize=10, ha='center', va='center',
+                       color='#2C3E50', weight='medium')
         
+        # Professional footer
+        footer_y = 0.5
+        footer_text = "Generated by Team Picker • github.com/mabreyes/team-picker"
+        ax.text(cols * 2.5, footer_y, footer_text, 
+               fontsize=10, ha='center', va='center',
+               color='#7F8C8D', style='italic')
+        
+        # Save with high quality
         plt.tight_layout()
-        plt.savefig(file_path, dpi=300, bbox_inches='tight')
+        plt.savefig(file_path, dpi=300, bbox_inches='tight', 
+                   facecolor='#FAFAFA', edgecolor='none',
+                   pad_inches=0.2)
         plt.close()
     
     def export_students_as_image(self, students: List[Student], file_path: str) -> None:
-        """Export student list as an image."""
-        fig, ax = plt.subplots(figsize=(10, 12))
-        ax.set_xlim(0, 10)
-        ax.set_ylim(0, 12)
+        """Export student list as a professional image."""
+        # Calculate layout
+        students_per_col = 20
+        cols = (len(students) + students_per_col - 1) // students_per_col
+        
+        fig_width = max(12, cols * 6)
+        fig_height = max(14, students_per_col * 0.6 + 4)
+        
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+        ax.set_xlim(0, cols * 6)
+        ax.set_ylim(0, fig_height)
         ax.axis('off')
         
-        # Title
-        ax.text(5, 11.5, f"Student List ({len(students)} students)", 
-               fontsize=16, fontweight='bold', ha='center')
+        # Gradient background
+        gradient = np.linspace(0, 1, 256).reshape(256, -1)
+        gradient = np.vstack((gradient, gradient))
+        ax.imshow(gradient, extent=[0, cols * 6, 0, fig_height], 
+                 aspect='auto', cmap='Greens', alpha=0.1)
         
-        # Students in columns
-        students_per_col = 15
-        cols = (len(students) + students_per_col - 1) // students_per_col
+        # Professional header
+        header_y = fig_height - 2
+        ax.text(cols * 3, header_y, f"Student Directory", 
+               fontsize=26, fontweight='bold', ha='center',
+               color='#2C3E50')
+        
+        ax.text(cols * 3, header_y - 0.7, f"{len(students)} DLSU Students", 
+               fontsize=16, ha='center',
+               color='#34495E', style='italic')
+        
+        # Students in professional columns
+        start_y = fig_height - 3.5
         
         for i, student in enumerate(students):
             col = i // students_per_col
             row = i % students_per_col
             
-            x = 1 + (col * 4)
-            y = 10.5 - (row * 0.6)
+            x = col * 6 + 3
+            y = start_y - row * 0.55
             
-            ax.text(x, y, f"{i+1:2d}. {student.name}", fontsize=10, ha='left')
+            # Alternating row backgrounds
+            if row % 2 == 0:
+                row_bg = FancyBboxPatch((col * 6 + 0.2, y - 0.2), 5.6, 0.4,
+                                      boxstyle="round,pad=0.05",
+                                      facecolor='white', alpha=0.6)
+                ax.add_patch(row_bg)
+            
+            # Student number and name
+            ax.text(x, y, f"{i+1:2d}. {student.name}", 
+                   fontsize=11, ha='center', va='center',
+                   color='#2C3E50', weight='medium')
+        
+        # Footer
+        footer_y = 0.5
+        ax.text(cols * 3, footer_y, "DLSU Student Directory • github.com/mabreyes/team-picker", 
+               fontsize=12, ha='center',
+               color='#7F8C8D', style='italic')
         
         plt.tight_layout()
-        plt.savefig(file_path, dpi=300, bbox_inches='tight')
+        plt.savefig(file_path, dpi=300, bbox_inches='tight',
+                   facecolor='#FAFAFA', edgecolor='none',
+                   pad_inches=0.2)
         plt.close()
 
 
