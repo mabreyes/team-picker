@@ -24,6 +24,50 @@ except ImportError:
     RTF_SUPPORT = False
     print("Warning: striprtf not installed. RTF file support disabled.")
 
+
+def process_students_with_duplicates(emails, source="upload"):
+    """Process a list of emails into student objects, handling duplicates.
+
+    Args:
+        emails: List of email addresses
+        source: Source of the emails (for error messages)
+
+    Returns:
+        tuple: (students_list, duplicates_list, errors_list)
+    """
+    students = []
+    seen_emails = set()
+    duplicates = []
+    errors = []
+
+    for i, email in enumerate(emails, 1):
+        email = email.strip()
+
+        # Skip empty emails
+        if not email:
+            continue
+
+        # Check for duplicate
+        if email.lower() in seen_emails:
+            duplicates.append({"email": email, "line": i})
+            continue
+
+        # Validate email format
+        if "@" not in email:
+            errors.append({"email": email, "line": i, "error": "Invalid email format"})
+            continue
+
+        try:
+            # Create student object
+            student = Student(email=email)
+            students.append({"name": student.name, "email": email})
+            seen_emails.add(email.lower())
+        except Exception as e:
+            errors.append({"email": email, "line": i, "error": str(e)})
+
+    return students, duplicates, errors
+
+
 # Configure matplotlib to use non-GUI backend
 matplotlib.use("Agg")
 
@@ -93,46 +137,56 @@ def upload_students():
                 content = rtf_to_text(rtf_content)
 
             # Parse students from content
-            students = []
             lines = content.strip().split("\n")
+            emails = []
 
-            for line_num, line in enumerate(lines, 1):
+            for line in lines:
                 email = line.strip()
                 # Skip empty lines and common RTF artifacts
                 if not email or email.startswith("{") or email.startswith("\\"):
                     continue
 
-                if "@" in email:
-                    # Clean up any remaining RTF formatting
-                    email = email.replace("}", "").replace("{", "").strip()
-                    if email and "@" in email:
-                        students.append(
-                            {"name": Student(email=email).name, "email": email}
-                        )
-                elif email and len(email) > 3:  # Ignore very short non-email lines
-                    return (
-                        jsonify(
-                            {
-                                "error": (
-                                    f"Invalid email format on line {line_num}: "
-                                    f"{email}"
-                                )
-                            }
-                        ),
-                        400,
-                    )
+                # Clean up any remaining RTF formatting
+                email = email.replace("}", "").replace("{", "").strip()
+                if email:
+                    emails.append(email)
+
+            # Process emails with duplicate detection
+            students, duplicates, errors = process_students_with_duplicates(
+                emails, source="file_upload"
+            )
 
             if not students:
                 return jsonify({"error": "No valid email addresses found"}), 400
 
-            return jsonify(
-                {
-                    "success": True,
-                    "students": students,
-                    "count": len(students),
-                    "file_type": file_type.upper(),
-                }
-            )
+            # Prepare response with duplicate and error information
+            response_data = {
+                "success": True,
+                "students": students,
+                "count": len(students),
+                "file_type": file_type.upper(),
+            }
+
+            # Add warnings for duplicates and errors if any
+            warnings = []
+            if duplicates:
+                duplicate_count = len(duplicates)
+                plural_suffix = "s" if duplicate_count != 1 else ""
+                warnings.append(
+                    f"Removed {duplicate_count} duplicate email{plural_suffix}"
+                )
+
+            if errors:
+                error_count = len(errors)
+                plural_suffix = "s" if error_count != 1 else ""
+                warnings.append(f"Skipped {error_count} invalid email{plural_suffix}")
+
+            if warnings:
+                response_data["warnings"] = warnings
+                response_data["duplicates"] = duplicates
+                response_data["errors"] = errors
+
+            return jsonify(response_data)
 
         finally:
             # Clean up uploaded file
@@ -201,10 +255,13 @@ def create_teams():
                 "success": True,
                 "teams": teams_data,
                 "metadata": {
-                    "method": result.method.value,
-                    "total_students": result.total_students,
-                    "num_teams": result.num_teams,
-                    "base_team_size": result.base_team_size,
+                    "num_teams": len(teams_data),
+                    "total_students": sum(
+                        team["size"]
+                        for team in teams_data
+                        if isinstance(team["size"], int)
+                    ),
+                    "method": method,
                     "timestamp": timestamp,
                 },
                 "image_base64": img_base64,
@@ -223,6 +280,54 @@ def create_teams():
 
     except Exception as e:
         return jsonify({"error": f"Team creation error: {str(e)}"}), 500
+
+
+@app.route("/api/manual-students", methods=["POST"])
+def create_manual_students():
+    """Create student data from manually entered email addresses."""
+    try:
+        data = request.get_json()
+        emails = data.get("emails", [])
+
+        if not emails:
+            return jsonify({"error": "No emails provided"}), 400
+
+        # Filter out empty emails and validate format
+        valid_emails = []
+        for email in emails:
+            email = email.strip()
+            if email and "@" in email:
+                valid_emails.append(email)
+
+        if not valid_emails:
+            return jsonify({"error": "No valid email addresses provided"}), 400
+
+        # Create student objects from emails using the existing Student model
+        students, duplicates, errors = process_students_with_duplicates(
+            valid_emails, source="manual_entry"
+        )
+
+        if not students:
+            return (
+                jsonify(
+                    {"error": "Could not process any of the provided email addresses"}
+                ),
+                400,
+            )
+
+        return jsonify(
+            {
+                "success": True,
+                "students": students,
+                "count": len(students),
+                "source": "manual_entry",
+                "duplicates": duplicates,
+                "errors": errors,
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"error": f"Manual student creation error: {str(e)}"}), 500
 
 
 @app.route("/api/download/json/<timestamp>")
@@ -256,23 +361,33 @@ def download_image(timestamp):
 @app.route("/api/sample-data")
 def get_sample_data():
     """Get sample student data for demo purposes."""
-    sample_students = [
-        {"name": "John Doe", "email": "john.doe@university.edu"},
-        {"name": "Jane Smith", "email": "jane.smith@university.edu"},
-        {"name": "Alex Johnson", "email": "alex.johnson@university.edu"},
-        {"name": "Maria Garcia", "email": "maria.garcia@university.edu"},
-        {"name": "David Brown", "email": "david.brown@university.edu"},
-        {"name": "Sarah Wilson", "email": "sarah.wilson@university.edu"},
-        {"name": "Michael Davis", "email": "michael.davis@university.edu"},
-        {"name": "Emily Taylor", "email": "emily.taylor@university.edu"},
-        {"name": "James Anderson", "email": "james.anderson@university.edu"},
-        {"name": "Lisa Thomas", "email": "lisa.thomas@university.edu"},
-        {"name": "Robert Jackson", "email": "robert.jackson@university.edu"},
-        {"name": "Jennifer White", "email": "jennifer.white@university.edu"},
+    sample_emails = [
+        "john.doe@university.edu",
+        "jane.smith@university.edu",
+        "alex.johnson@university.edu",
+        "maria.garcia@university.edu",
+        "david.brown@university.edu",
+        "sarah.wilson@university.edu",
+        "michael.davis@university.edu",
+        "emily.taylor@university.edu",
+        "james.anderson@university.edu",
+        "lisa.thomas@university.edu",
+        "robert.jackson@university.edu",
+        "jennifer.white@university.edu",
     ]
 
+    # Process sample emails with duplicate detection for consistency
+    students, duplicates, errors = process_students_with_duplicates(
+        sample_emails, source="sample_data"
+    )
+
     return jsonify(
-        {"success": True, "students": sample_students, "count": len(sample_students)}
+        {
+            "success": True,
+            "students": students,
+            "count": len(students),
+            "source": "sample_data",
+        }
     )
 
 

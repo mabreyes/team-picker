@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
     UPLOAD: '/api/upload',
     SAMPLE_DATA: '/api/sample-data',
     CREATE_TEAMS: '/api/create-teams',
+    MANUAL_STUDENTS: '/api/manual-students',
 };
 
 // File Configuration
@@ -36,6 +37,10 @@ export const DEFAULTS = {
 export const STATUS_MESSAGES = {
     UPLOAD_SUCCESS: (count, fileType) =>
         `✅ Successfully loaded ${count} students${fileType ? ` (${fileType} file)` : ''}`,
+    UPLOAD_SUCCESS_WITH_WARNINGS: (count, fileType, warnings) =>
+        `✅ Successfully loaded ${count} students${
+            fileType ? ` (${fileType} file)` : ''
+        }. ⚠️ ${warnings.join(', ')}`,
     UPLOAD_ERROR: (error) => `❌ ${error}`,
     UPLOAD_FAILED: (error) => `❌ Upload failed: ${error}`,
     SAMPLE_LOADED: (count) => `✅ Loaded ${count} sample students`,
@@ -47,6 +52,12 @@ export const STATUS_MESSAGES = {
 
 // DOM Element IDs
 export const ELEMENT_IDS = {
+    // Input Method Toggle
+    FILE_METHOD_BTN: 'fileMethodBtn',
+    MANUAL_METHOD_BTN: 'manualMethodBtn',
+    FILE_UPLOAD_SECTION: 'fileUploadSection',
+    MANUAL_ENTRY_SECTION: 'manualEntrySection',
+
     // File Upload
     FILE_INPUT: 'fileInput',
     UPLOAD_BTN: 'uploadBtn',
@@ -60,10 +71,21 @@ export const ELEMENT_IDS = {
     SELECTED_FILE_SIZE: 'selectedFileSize',
     REMOVE_FILE: 'removeFile',
 
+    // Manual Entry
+    MANUAL_INPUTS_CONTAINER: 'manualInputsContainer',
+    ADD_INPUT_BTN: 'addInputBtn',
+    CREATE_FROM_MANUAL_BTN: 'createFromManualBtn',
+
     // Students Preview
     STUDENTS_PREVIEW: 'studentsPreview',
     STUDENT_COUNT: 'studentCount',
     STUDENT_LIST: 'studentList',
+    EDIT_STUDENTS_BTN: 'editStudentsBtn',
+    CLEAR_STUDENTS_BTN: 'clearStudentsBtn',
+    EDIT_MODE_CONTROLS: 'editModeControls',
+    ADD_NEW_STUDENT_BTN: 'addNewStudentBtn',
+    SAVE_STUDENTS_BTN: 'saveStudentsBtn',
+    CANCEL_EDIT_BTN: 'cancelEditBtn',
 
     // Team Configuration
     TEAM_CONFIG: 'teamConfig',
