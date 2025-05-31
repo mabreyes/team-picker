@@ -1,5 +1,8 @@
-# Team Picker Project Requirements (Enhanced)
-# Updated to include dependencies for image export and enhanced features
+# Team Picker Project Requirements (Production Ready)
+# Dependencies for Render.com deployment
+
+# Production WSGI server
+gunicorn>=21.2.0
 
 # Core dependencies for image generation
 matplotlib>=3.5.0

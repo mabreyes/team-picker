@@ -72,15 +72,21 @@ def process_students_with_duplicates(emails, source="upload"):
 matplotlib.use("Agg")
 
 app = Flask(__name__)
-app.config[
-    "SECRET_KEY"
-] = "team-picker-secret-key-2024"  # pragma: allowlist secret  # nosec B105
+
+# Production-ready configuration
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "team-picker-secret-key-2024")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max file size
 
 # Ensure upload directory exists
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# Ensure output directories exist
+OUTPUT_FOLDER = "output"
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+os.makedirs(os.path.join(OUTPUT_FOLDER, "json"), exist_ok=True)
+os.makedirs(os.path.join(OUTPUT_FOLDER, "images"), exist_ok=True)
 
 
 @app.route("/")
@@ -392,4 +398,7 @@ def get_sample_data():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8000)  # nosec B201 B104
+    # Development configuration
+    port = int(os.environ.get("PORT", 8000))
+    debug = os.environ.get("FLASK_ENV") == "development"
+    app.run(debug=debug, host="0.0.0.0", port=port)  # nosec B104

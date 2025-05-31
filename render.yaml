@@ -1,0 +1,15 @@
+services:
+    - type: web
+      name: team-picker
+      env: python
+      buildCommand: pip install -r requirements.txt
+      startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+      envVars:
+          - key: FLASK_ENV
+            value: production
+          - key: SECRET_KEY
+            generateValue: true
+      disk:
+          name: team-picker-disk
+          mountPath: /opt/render/project/src/uploads
+          sizeGB: 1

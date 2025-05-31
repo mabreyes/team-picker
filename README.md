@@ -454,18 +454,45 @@ class DatabaseStudentRepository(StudentRepository):
 
 ## 🚀 Deployment
 
-### Production Setup
+### Render.com (Recommended)
+
+The easiest way to deploy your Team Picker application:
 
 ```bash
-# Install production dependencies only
+# 1. Push to GitHub
+git add .
+git commit -m "Add Render.com deployment configuration"
+git push origin main
+
+# 2. Deploy to Render.com
+# - Visit https://render.com
+# - Create new Web Service from your GitHub repo
+# - Render will automatically detect and deploy using render.yaml
+```
+
+**✅ Render.com Benefits:**
+
+-   Free tier available with 750 hours/month
+-   Automatic SSL certificates
+-   Zero-downtime deployments
+-   Built-in monitoring and logging
+
+📖 **[Complete Render.com Deployment Guide](DEPLOYMENT.md)**
+
+### Manual Production Setup
+
+For other hosting providers:
+
+```bash
+# Install production dependencies
 pip install -r requirements.txt
 
-# Set production environment
+# Set production environment variables
 export FLASK_ENV=production
 export SECRET_KEY="your-secure-secret-key"  # pragma: allowlist secret
 
 # Run with production server
-gunicorn -w 4 -b 0.0.0.0:8000 app:app
+gunicorn --bind 0.0.0.0:$PORT app:app
 ```
 
 ### Docker Deployment
@@ -477,8 +504,17 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 8000
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
 ```
+
+### Configuration Files for Deployment
+
+The repository includes ready-to-use deployment configurations:
+
+-   **`render.yaml`**: Automatic Render.com deployment
+-   **`gunicorn.conf.py`**: Production server optimization
+-   **`Procfile`**: Alternative deployment command
+-   **`runtime.txt`**: Python version specification
 
 ## 🔒 Security Features
 
