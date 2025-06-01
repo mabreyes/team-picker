@@ -31,69 +31,91 @@
                     <p class="card-subtitle">Choose how you want to add students to create teams</p>
                 </div>
 
-                <!-- Input Method Toggle -->
-                <div class="form-group">
-                    <div class="input-method-toggle">
-                        <button type="button" id="fileMethodBtn" class="method-btn method-btn-active">
-                            📄 Upload File
-                        </button>
-                        <button type="button" id="manualMethodBtn" class="method-btn">✏️ Manual Entry</button>
-                    </div>
+                <!-- Tab Navigation -->
+                <div class="tab-navigation">
+                    <button
+                        type="button"
+                        id="fileMethodBtn"
+                        class="tab-button tab-button-active"
+                        role="tab"
+                        aria-selected="true"
+                        aria-controls="fileUploadSection"
+                    >
+                        📄 Upload File
+                    </button>
+                    <button
+                        type="button"
+                        id="manualMethodBtn"
+                        class="tab-button"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="manualEntrySection"
+                    >
+                        ✏️ Manual Entry
+                    </button>
                 </div>
 
-                <!-- File Upload Method -->
-                <div id="fileUploadSection" class="input-method-section">
-                    <div class="card-subtitle mb-4">Upload a .txt or .rtf file with one email address per line</div>
+                <!-- Tab Content Container -->
+                <div class="tab-content">
+                    <!-- File Upload Tab Panel -->
+                    <div
+                        id="fileUploadSection"
+                        class="tab-panel tab-panel-active"
+                        role="tabpanel"
+                        aria-labelledby="fileMethodBtn"
+                    >
+                        <div class="card-subtitle mb-4">Upload a .txt or .rtf file with one email address per line</div>
 
-                    <div class="form-group">
-                        <div class="file-upload">
-                            <input type="file" id="fileInput" class="file-input" accept=".txt,.rtf" />
-                            <label for="fileInput" class="file-upload-label" id="fileUploadLabel">
-                                <div class="file-upload-text" id="fileUploadText">📄 Choose student list file</div>
-                                <div class="file-upload-subtext" id="fileUploadSubtext">
-                                    or drag and drop a .txt or .rtf file
+                        <div class="form-group">
+                            <div class="file-upload">
+                                <input type="file" id="fileInput" class="file-input" accept=".txt,.rtf" />
+                                <label for="fileInput" class="file-upload-label" id="fileUploadLabel">
+                                    <div class="file-upload-text" id="fileUploadText">📄 Choose student list file</div>
+                                    <div class="file-upload-subtext" id="fileUploadSubtext">
+                                        or drag and drop a .txt or .rtf file
+                                    </div>
+                                </label>
+                            </div>
+                            <div id="selectedFile" class="selected-file hidden">
+                                <div class="selected-file-info">
+                                    <span class="file-icon">📄</span>
+                                    <span class="file-name" id="selectedFileName"></span>
+                                    <span class="file-size" id="selectedFileSize"></span>
+                                    <button type="button" class="remove-file" id="removeFile">✕</button>
                                 </div>
-                            </label>
-                        </div>
-                        <div id="selectedFile" class="selected-file hidden">
-                            <div class="selected-file-info">
-                                <span class="file-icon">📄</span>
-                                <span class="file-name" id="selectedFileName"></span>
-                                <span class="file-size" id="selectedFileSize"></span>
-                                <button type="button" class="remove-file" id="removeFile">✕</button>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-2">
-                        <button id="uploadBtn" class="btn btn-primary" disabled>
-                            <span id="uploadText">Upload File</span>
-                            <span id="uploadLoading" class="loading hidden"></span>
-                        </button>
-                        <button id="sampleBtn" class="btn btn-secondary">Use Sample Data</button>
-                    </div>
-                </div>
-
-                <!-- Manual Entry Method -->
-                <div id="manualEntrySection" class="input-method-section hidden">
-                    <div class="card-subtitle mb-4">Enter student email addresses manually, one at a time</div>
-
-                    <div id="manualInputsContainer" class="manual-inputs-container">
-                        <div class="manual-input-row">
-                            <input
-                                type="email"
-                                class="form-input manual-name-input"
-                                placeholder="Enter student email address"
-                            />
-                            <button type="button" class="btn-remove-input" title="Remove">✕</button>
+                        <div class="grid grid-cols-2">
+                            <button id="uploadBtn" class="btn btn-primary" disabled>
+                                <span id="uploadText">Upload File</span>
+                                <span id="uploadLoading" class="loading hidden"></span>
+                            </button>
+                            <button id="sampleBtn" class="btn btn-secondary">Use Sample Data</button>
                         </div>
                     </div>
 
-                    <div class="manual-entry-actions">
-                        <button id="addInputBtn" class="btn btn-secondary">
-                            <span class="add-icon">+</span> Add Another Student
-                        </button>
-                        <button id="createFromManualBtn" class="btn btn-primary">Create Teams from Emails</button>
+                    <!-- Manual Entry Tab Panel -->
+                    <div id="manualEntrySection" class="tab-panel" role="tabpanel" aria-labelledby="manualMethodBtn">
+                        <div class="card-subtitle mb-4">Enter student email addresses manually, one at a time</div>
+
+                        <div id="manualInputsContainer" class="manual-inputs-container">
+                            <div class="manual-input-row">
+                                <input
+                                    type="email"
+                                    class="form-input manual-name-input"
+                                    placeholder="Enter student email address"
+                                />
+                                <button type="button" class="btn-remove-input" title="Remove">✕</button>
+                            </div>
+                        </div>
+
+                        <div class="manual-entry-actions">
+                            <button id="addInputBtn" class="btn btn-secondary">
+                                <span class="add-icon">+</span> Add Another Student
+                            </button>
+                            <button id="createFromManualBtn" class="btn btn-primary">Create Teams from Emails</button>
+                        </div>
                     </div>
                 </div>
 

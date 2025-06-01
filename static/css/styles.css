@@ -132,48 +132,109 @@ body {
 }
 
 /* ===================================
-   Input Method Toggle
+   Tab Navigation
    =================================== */
-.input-method-toggle {
+.tab-navigation {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.5rem;
+    gap: 0;
 }
 
-.method-btn {
+.tab-button {
     flex: 1;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    background: var(--surface);
+    padding: 1rem 1.5rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
     color: var(--text-secondary);
     font-family: inherit;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
 }
 
-.method-btn:hover {
+.tab-button:hover {
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+.tab-button-active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
     background: var(--background);
-    border-color: var(--primary-color);
 }
 
-.method-btn-active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.method-btn-active:hover {
-    background: var(--primary-hover);
+.tab-button-active:hover {
+    color: var(--primary-hover);
+    border-bottom-color: var(--primary-hover);
 }
 
 /* ===================================
-   Input Method Sections
+   Tab Content
    =================================== */
-.input-method-section {
-    transition: all 0.3s ease;
+.tab-content {
+    position: relative;
+}
+
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.tab-panel-active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================
+   Responsive Tab Design
+   =================================== */
+@media (max-width: 768px) {
+    .tab-navigation {
+        flex-direction: column;
+        border-bottom: none;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .tab-button {
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .tab-button-active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .tab-button-active:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+
+    .manual-entry-actions {
+        flex-direction: column;
+    }
+
+    .manual-entry-actions .btn {
+        flex: none;
+        width: 100%;
+    }
 }
 
 /* ===================================
@@ -245,21 +306,6 @@ body {
 .add-icon {
     font-weight: bold;
     font-size: 1.1em;
-}
-
-@media (max-width: 768px) {
-    .input-method-toggle {
-        flex-direction: column;
-    }
-
-    .manual-entry-actions {
-        flex-direction: column;
-    }
-
-    .manual-entry-actions .btn {
-        flex: none;
-        width: 100%;
-    }
 }
 
 /* ===================================

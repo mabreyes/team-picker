@@ -732,29 +732,64 @@ class ManualEntryManager {
         this.domManager
             .get('MANUAL_METHOD_BTN')
             .addEventListener('click', () => this.switchToManualMethod());
+
+        // Add keyboard navigation for tabs
+        this.domManager
+            .get('FILE_METHOD_BTN')
+            .addEventListener('keydown', (e) => this.handleTabKeydown(e, 'file'));
+        this.domManager
+            .get('MANUAL_METHOD_BTN')
+            .addEventListener('keydown', (e) => this.handleTabKeydown(e, 'manual'));
+    }
+
+    handleTabKeydown(event, tabType) {
+        switch (event.key) {
+            case 'ArrowRight':
+            case 'ArrowLeft':
+                event.preventDefault();
+                if (tabType === 'file') {
+                    this.domManager.get('MANUAL_METHOD_BTN').focus();
+                } else {
+                    this.domManager.get('FILE_METHOD_BTN').focus();
+                }
+                break;
+            case 'Enter':
+            case ' ':
+                event.preventDefault();
+                if (tabType === 'file') {
+                    this.switchToFileMethod();
+                } else {
+                    this.switchToManualMethod();
+                }
+                break;
+        }
     }
 
     switchToFileMethod() {
-        // Update button states
-        this.domManager.get('FILE_METHOD_BTN').classList.add('method-btn-active');
-        this.domManager.get('MANUAL_METHOD_BTN').classList.remove('method-btn-active');
+        // Update button states and ARIA attributes
+        this.domManager.get('FILE_METHOD_BTN').classList.add('tab-button-active');
+        this.domManager.get('FILE_METHOD_BTN').setAttribute('aria-selected', 'true');
+        this.domManager.get('MANUAL_METHOD_BTN').classList.remove('tab-button-active');
+        this.domManager.get('MANUAL_METHOD_BTN').setAttribute('aria-selected', 'false');
 
-        // Show/hide sections
-        this.domManager.show('FILE_UPLOAD_SECTION');
-        this.domManager.hide('MANUAL_ENTRY_SECTION');
+        // Show/hide tab panels
+        this.domManager.get('FILE_UPLOAD_SECTION').classList.add('tab-panel-active');
+        this.domManager.get('MANUAL_ENTRY_SECTION').classList.remove('tab-panel-active');
 
         // Clear any existing manual data
         this.clearManualInputs();
     }
 
     switchToManualMethod() {
-        // Update button states
-        this.domManager.get('MANUAL_METHOD_BTN').classList.add('method-btn-active');
-        this.domManager.get('FILE_METHOD_BTN').classList.remove('method-btn-active');
+        // Update button states and ARIA attributes
+        this.domManager.get('MANUAL_METHOD_BTN').classList.add('tab-button-active');
+        this.domManager.get('MANUAL_METHOD_BTN').setAttribute('aria-selected', 'true');
+        this.domManager.get('FILE_METHOD_BTN').classList.remove('tab-button-active');
+        this.domManager.get('FILE_METHOD_BTN').setAttribute('aria-selected', 'false');
 
-        // Show/hide sections
-        this.domManager.hide('FILE_UPLOAD_SECTION');
-        this.domManager.show('MANUAL_ENTRY_SECTION');
+        // Show/hide tab panels
+        this.domManager.get('MANUAL_ENTRY_SECTION').classList.add('tab-panel-active');
+        this.domManager.get('FILE_UPLOAD_SECTION').classList.remove('tab-panel-active');
 
         // Clear any existing file data and focus on first input
         this.studentManager.clear();
