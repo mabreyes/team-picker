@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Page Not Found - Team Picker</title>
+
+        <!-- Host Grotesk Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- External CSS -->
+        <link rel="stylesheet" href="/static/css/styles.css" />
+
+        <!-- Custom 404 styles -->
+        <style>
+            .error-container {
+                min-height: 80vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .error-content {
+                max-width: 600px;
+                padding: 2rem;
+            }
+
+            .error-code {
+                font-size: 8rem;
+                font-weight: 800;
+                color: var(--primary-color);
+                line-height: 1;
+                margin-bottom: 1rem;
+                text-shadow: 0 4px 8px rgb(37 99 235 / 0.1);
+            }
+
+            .error-title {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-bottom: 1rem;
+            }
+
+            .error-message {
+                font-size: 1.125rem;
+                color: var(--text-secondary);
+                margin-bottom: 2rem;
+                line-height: 1.6;
+            }
+
+            .error-actions {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .error-illustration {
+                font-size: 4rem;
+                margin-bottom: 1.5rem;
+                opacity: 0.8;
+            }
+
+            @media (max-width: 768px) {
+                .error-code {
+                    font-size: 6rem;
+                }
+
+                .error-title {
+                    font-size: 1.5rem;
+                }
+
+                .error-message {
+                    font-size: 1rem;
+                }
+
+                .error-actions {
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                .error-actions .btn {
+                    width: 100%;
+                    max-width: 300px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>🎯 Team Picker</h1>
+                <p>Professional team assignment application</p>
+            </div>
+
+            <!-- Error Content -->
+            <div class="error-container">
+                <div class="error-content">
+                    <div class="error-illustration">🔍</div>
+                    <div class="error-code">404</div>
+                    <h2 class="error-title">Page Not Found</h2>
+                    <p class="error-message">
+                        Oops! The page you're looking for seems to have wandered off to join a different team. Don't
+                        worry, we'll help you get back on track!
+                    </p>
+
+                    <div class="error-actions">
+                        <a href="/" class="btn btn-primary"> 🏠 Go Home </a>
+                        <button onclick="history.back()" class="btn btn-secondary">← Go Back</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Helpful Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">What can you do here?</h2>
+                    <p class="card-subtitle">Quick links to get you started with Team Picker</p>
+                </div>
+
+                <div class="grid grid-cols-3">
+                    <div class="feature-item">
+                        <div class="feature-icon">📄</div>
+                        <h3 class="feature-title">Upload Files</h3>
+                        <p class="feature-description">Upload .txt or .rtf files with student email addresses</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">✏️</div>
+                        <h3 class="feature-title">Manual Entry</h3>
+                        <p class="feature-description">Enter student emails manually for quick team creation</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">Create Teams</h3>
+                        <p class="feature-description">Generate balanced teams with professional exports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .feature-item {
+                text-align: center;
+                padding: 1.5rem;
+                border-radius: var(--border-radius);
+                background: var(--surface);
+                border: 1px solid var(--border);
+                transition: all 0.2s ease;
+            }
+
+            .feature-item:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .feature-icon {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .feature-title {
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 0.5rem;
+            }
+
+            .feature-description {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                line-height: 1.5;
+            }
+
+            @media (max-width: 768px) {
+                .feature-item {
+                    padding: 1rem;
+                }
+
+                .feature-icon {
+                    font-size: 2rem;
+                }
+            }
+        </style>
+    </body>
+</html>

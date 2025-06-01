@@ -397,6 +397,24 @@ def get_sample_data():
     )
 
 
+@app.errorhandler(404)
+def page_not_found(error):
+    """Custom 404 error handler."""
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    """Custom 500 error handler."""
+    return render_template("500.html"), 500
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    """Custom 403 error handler."""
+    return render_template("404.html"), 403  # Use 404 template for 403 as well
+
+
 if __name__ == "__main__":
     # Development configuration
     port = int(os.environ.get("PORT", 8000))
